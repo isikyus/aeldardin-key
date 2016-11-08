@@ -29,9 +29,9 @@ case ARGV.length
 when 0
     input_file = STDIN
 when 1
-    input_file = File.open(ARGV[1], 'r')
+    input_file = File.open(ARGV[0], 'r')
 else
-    STDERR.puts "Usage: #{ARGV[0]} [<filename.yml>]"
+    STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
     exit 1
 end
 
