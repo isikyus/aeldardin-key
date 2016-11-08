@@ -17,8 +17,6 @@ class AeldardinToDot
         # Output .gv header:
         output_file.puts("graph #{safe_id(dungeon['title'])} {")
 
-        $stderr.puts rooms_by_key.inspect
-
         rooms_by_key.each do |_key, room|
 
             room_name = room['name'] || room['key']
