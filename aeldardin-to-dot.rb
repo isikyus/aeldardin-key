@@ -1,6 +1,6 @@
 # File: aeldardin-to-dot.rb
 #
-# Script to convert Aeldardin-Key YAML files into .dot files representing the connection graph of the dungeon.
+# Script to convert Aeldardin-Key YAML files into Dot .gv files representing the connection graph of the dungeon.
 
 require 'yaml'
 
@@ -11,7 +11,7 @@ class AeldardinToDot
         @file = file
     end
     
-    # @param [IO] output_file The IO object to write the output 'dot' graph data to.
+    # @param [IO] output_file The IO object to write the output .gv graph data into.
     def generateDot(output_file)
         
         # Load the whole dungeon into memory at once.
@@ -19,9 +19,37 @@ class AeldardinToDot
 
         # 'nil' means read all lines as one row.
         yaml_text = @file.readlines(nil)[0]
-        yaml_data = YAML.load(yaml_text)
+        dungeon = YAML.load(yaml_text)
 
-        output_file.write(yaml_data.keys)
+        # Output .gv header:
+        safe_title = dungeon['title'].gsub(/\s+/, '_').gsub(/[^A-Za-z0-9_]/, '')
+        output_file.puts("graph #{safe_title} {")
+        
+        dungeon['zones'].each do |zone|
+            
+            regions = zone['regions']
+            
+            if regions
+                regions.each do |region|
+                    region['rooms'].each do |room|
+                    
+                        # Output a graph edge for every exit from the room.
+                        # TODO: We will end up duplicating edges.
+                        room['exits'].each do |exit|
+
+                            # Exit may look like '42' or { secret: '42' }
+                            destination = exit.is_a?(Hash) ? exit.values.first : exit
+                            output_file.puts("    #{room.key} -- #{exit};")
+                        end
+                    end
+                end
+            else
+                $stderr.puts("Found zone with no regions: #{zone['name']}")
+            end
+        end
+        
+        # Conclude graph data
+        output_file.puts('}')
     end
 end
 
