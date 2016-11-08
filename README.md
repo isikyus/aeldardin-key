@@ -7,6 +7,12 @@ This is a companion project to Aeldardin Rooms.
 Whereas that app aims to represent dungeon _layouts_ in a machine-readable way,
 this one models and processes dungeon _keys_.
 
+## Usage:
+
+Convert to a .dot graph:
+
+    ruby aeldardin-to-dot.rb dungeon.yml > output.dot
+
 ## Rationale
 
 Why is this worth doing?
