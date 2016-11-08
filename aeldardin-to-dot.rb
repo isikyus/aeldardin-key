@@ -22,8 +22,7 @@ class AeldardinToDot
         dungeon = YAML.load(yaml_text)
 
         # Output .gv header:
-        safe_title = dungeon['title'].gsub(/\s+/, '_').gsub(/[^A-Za-z0-9_]/, '')
-        output_file.puts("graph #{safe_title} {")
+        output_file.puts("graph #{safe_id(dungeon['title'])} {")
         
         dungeon['zones'].each do |zone|
             
@@ -39,7 +38,8 @@ class AeldardinToDot
 
                             # Exit may look like '42' or { secret: '42' }
                             destination = exit.is_a?(Hash) ? exit.values.first : exit
-                            output_file.puts("    #{room['key']} -- #{destination};")
+
+                            output_file.puts("    #{node_name(room['key'])} -- #{node_name(destination)};")
                         end
                     end
                 end
@@ -50,6 +50,19 @@ class AeldardinToDot
         
         # Conclude graph data
         output_file.puts('}')
+    end
+
+    private
+
+    # Converts a key into a node name usable by dot (i.e. not starting with numbers).
+    def node_name(key)
+       "node_#{safe_id(key.to_s)}"
+    end
+
+    # Convert any string into something safe to use as a Dot ID (node or graph).
+    # Not guaranteed to preserve uniqueness.
+    def safe_id(string)
+        string.gsub(/\s+/, '_').gsub(/[^A-Za-z0-9_]/, '')
     end
 end
 
