@@ -39,7 +39,7 @@ class AeldardinToDot
 
                             # Exit may look like '42' or { secret: '42' }
                             destination = exit.is_a?(Hash) ? exit.values.first : exit
-                            output_file.puts("    #{room.key} -- #{exit};")
+                            output_file.puts("    #{room['key']} -- #{destination};")
                         end
                     end
                 end
