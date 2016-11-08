@@ -38,16 +38,16 @@ TODO: write up a formal schema of some kind.
 * `blurb` (text): Summary of what the adventure is about
 * `monster`: Details of a particular monster. Exact format depends on the particular game you're writing for.
 * `zone`: A region of the dungeon (e.g. level):
-* * `id` (id): A machine-readable name for the zone, to allow references from elsewhere in the document.
-* * `name` (string)
-* * `encounters` (array): A random-encounter table for the zone. Could contain `monster` tags, or just text descriptions.
-* * `connections`: Ways to travel out of this zone (only really useful for wilderness, etc. without distinct rooms):
-* * * `key` (id): Machine-readable, unique name for use elsewhere.
-* * * `to` (idref): ID of the zone the connection leads to. (Not the exact room, which is determined by the exits list in the zone).
-* * * `description` (text)
-* * `region` (array): An area of the zone with mapped dungeon rooms
-* * * `name` (string): Descriptive name of the region
-* * * `rooms` (array):
-* * * * `key` (id): Map key number of the room. Must be unique within a zone (TODO: why this scope?)
-* * * * `name` (string): Descriptive room name. Optional.
-* * * * `exits` (array): Exits of the room. Array elements may be bare strings (interpreted as destination keys), or pairs like `<secret>: 22`, where `<secret>` is a reason the passage is hard to traverse (also blocked, concealed, narrow, etc.), and `22` is the key of the destination room.
+  * `id` (id): A machine-readable name for the zone, to allow references from elsewhere in the document.
+  * `name` (string)
+  * `encounters` (array): A random-encounter table for the zone. Could contain `monster` tags, or just text descriptions.
+  * `connections`: Ways to travel out of this zone (only really useful for wilderness, etc. without distinct rooms):
+    * `key` (id): Machine-readable, unique name for use elsewhere.
+    * `to` (idref): ID of the zone the connection leads to. (Not the exact room, which is determined by the exits list in the zone).
+    * `description` (text)
+  * `region` (array): An area of the zone with mapped dungeon rooms
+    * `name` (string): Descriptive name of the region
+    * `rooms` (array):
+      * `key` (id): Map key number of the room. Must be unique within a zone (TODO: why this scope?)
+      * `name` (string): Descriptive room name. Optional.
+      * `exits` (array): Exits of the room. Array elements may be bare strings (interpreted as destination keys), or pairs like `<secret>: 22`, where `<secret>` is a reason the passage is hard to traverse (also blocked, concealed, narrow, etc.), and `22` is the key of the destination room.
