@@ -37,7 +37,7 @@ TODO: write up a formal schema of some kind.
 * `title` (string): The title of the adventure
 * `blurb` (text): Summary of what the adventure is about
 * `monster`: Details of a particular monster. Exact format depends on the particular game you're writing for.
-* `zone`: A region of the dungeon (e.g. level):
+* `zone`: A region of the dungeon (e.g. level) (TODO: make this the same as `region`, so we can have a recursive structure):
   * `id` (id): A machine-readable name for the zone, to allow references from elsewhere in the document.
   * `name` (string)
   * `encounters` (array): A random-encounter table for the zone. Could contain `monster` tags, or just text descriptions.
