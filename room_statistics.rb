@@ -87,17 +87,34 @@ module Aeldardin
 
             # Only show local count if present
             if tree[:local][:all_rooms] > 0
-                stats_strings << "#{indent}#{tree[:local][:all_rooms]} rooms locally"
+                stats_strings << "#{indent}#{format_room_counts(tree[:local])} locally"
             end
 
             # Only show aggregate count if there were rooms in child regions
             if tree[:aggregate][:all_rooms] != tree[:local][:all_rooms]
-                stats_strings << "#{indent}#{tree[:aggregate][:all_rooms]} rooms"
+                stats_strings << "#{indent}#{format_room_counts(tree[:aggregate])}"
             end
 
             puts stats_strings.inspect
             stats_strings
+        end
 
+        # Format a particular set of room statistics, showing counts by type and overall.
+        # @param [Hash{Object, Integer}] A hash from arrays of room types to totals, with an extra symbol key (:all_rooms) for the overall total.
+        def format_room_counts(counts)
+
+            # Format the counts for individual room types.
+            type_total_keys = counts.keys - [:all_rooms]
+            type_total_strings = type_total_keys.map do |key|
+
+                # Special case for empty rooms, as that type can't be inferred from the type array.
+                total_name = (key == []) ? 'empty' : key.join('+')
+
+                # Like '17 monster+treasure
+                "#{counts[key]} #{total_name}"
+            end
+
+            "#{counts[:all_rooms]} rooms (#{type_total_strings.join(', ')})"
         end
     end
 end
