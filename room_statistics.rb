@@ -57,8 +57,6 @@ module Aeldardin
             end
 
             # Build and return the result:
-            puts local_stats.inspect
-            puts aggregate_stats.inspect
             {
                 :regions => recursive_stats,
                 :local => local_stats,
@@ -95,7 +93,6 @@ module Aeldardin
                 stats_strings << "#{indent}#{format_room_counts(tree[:aggregate])}"
             end
 
-            puts stats_strings.inspect
             stats_strings
         end
 
