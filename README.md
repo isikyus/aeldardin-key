@@ -13,6 +13,10 @@ Convert to a .dot graph:
 
     ruby aeldardin-to-dot.rb dungeon.yml > output.dot
 
+Calculate dungeon statistics (room counts):
+
+    ruby room_statistics.rb dungeon.yml
+
 ## Rationale
 
 Why is this worth doing?
