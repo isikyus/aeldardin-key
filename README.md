@@ -55,3 +55,11 @@ TODO: write up a formal schema of some kind.
       * `key` (id): Map key number of the room. Must be unique within a zone (TODO: why this scope?)
       * `name` (string): Descriptive room name. Optional.
       * `exits` (array): Exits of the room. Array elements may be bare strings (interpreted as destination keys), or pairs like `<secret>: 22`, where `<secret>` is a reason the passage is hard to traverse (also blocked, concealed, narrow, etc.), and `22` is the key of the destination room.
+      * `monster` (array): Array of monster details.
+      * `treasure` (array): Array of valuable items there for the taking. Items carried by monsters should be sub-keys on the relevant `monster` entries.
+        * `item` (string): Name of the item.
+        * `coin` (denomination): Denomination of coin. `item` is unnecessary in this case.
+        * `quantity` (number-or-die-roll): Number of this item in the room/carried by the monster.
+        * `value` (number-or-die-roll): Value of one item (or of the whole lot of no quantity specified -- e.g. for coins).
+      * `trap` (array): Array of trap descriptions.
+      * `description`: Text description of the room, excluding details that would go on one of the above keys.

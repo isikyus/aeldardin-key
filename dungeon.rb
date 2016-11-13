@@ -7,6 +7,50 @@ require 'yaml'
 module Aeldardin
     class Dungeon
 
+        # Represents a room within a dungeon
+        class Room
+
+            # Based off the OD&D random-dungeon-generation room types, but
+            # adjusted so each is a single room property:
+            # 'empty' is an absence of other properties, and 'monster and treasure'
+            # and 'trick or trap' each combine two types.
+            #
+            # Stored as strings rather than symbols so I can compare them to strings from user input.
+            # TODO: should probably ultimately be part of an OSR-specific plugin or something.
+            TYPES = %w[
+                monster
+                treasure
+                special
+                trick
+                trap
+            ]
+
+            def initialize(data)
+                @data = data
+            end
+
+            def key
+                @data['key']
+            end
+
+            def name
+                @data['name']
+            end
+
+            def exits
+                @data['exits']
+            end
+
+            # Similar to Gygax's room-type table in the OD&D random-dungeon rules
+            # (empty, monster, monster+treasure, special, trick or trap, treasure),
+            # but returns an array of types from TYPES.
+            #
+            # TODO: should I conver the return values to symbols?
+            def types
+                @data.keys & TYPES
+            end
+        end
+
         # @param [IO] file The IO object to read YAML from.
         def self.load(file)
 
@@ -45,12 +89,27 @@ module Aeldardin
         def regions
 
             # Use compact + flatten to combine the arrays in a nil-safe way (skip nil elements).
-            [@data['zones'], @data['regions']].compact.flatten.map { |region| Dungeon.new(region) }
+            @regions ||= begin
+                all_regions = [@data['zones'], @data['regions']]
+                without_empties = all_regions.compact.flatten
+                without_empties.map { |region| Dungeon.new(region) }
+            end
         end
 
         # Rooms part of this dungeon directly, excluding those in child regions.
         def local_rooms
-           @data['rooms']
+            @local_rooms ||= begin
+                room_hashes = @data['rooms'] || []
+                room_hashes.map { |hash| Room.new(hash) }
+            end
+        end
+
+        # All rooms, including children.
+        def rooms
+            @rooms ||= begin
+                child_rooms = regions.map(&:rooms).flatten
+                child_rooms + local_rooms
+            end
         end
 
         # Returns a lookup table from room keys (usually numbers) to the full room details.
@@ -58,26 +117,12 @@ module Aeldardin
             @rooms_by_key ||= begin
                 by_key = {}
 
-                @data['zones'].each do |zone|
-
-                    regions = zone['regions']
-
-                    if regions
-                        regions.each do |region|
-                            region['rooms'].each do |room|
-
-                                key = room['key']
-
-                                if by_key.key?(key)
-                                    raise "Unexpected duplicate room #{key}: #{room.inspect}"
-                                end
-
-                                by_key[key] = room
-                            end
-                        end
-                    else
-                        $stderr.puts("Found zone with no regions: #{zone['name']}")
+                rooms.each do |room|
+                    if by_key.key?(room.key)
+                        raise "Unexpected duplicate room #{room.key}: #{room.inspect}"
                     end
+
+                    by_key[room.key] = room
                 end
 
                 by_key

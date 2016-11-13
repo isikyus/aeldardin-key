@@ -18,18 +18,18 @@ module Aeldardin
 
             @dungeon.rooms_by_key.each do |_key, room|
 
-                room_name = room['name'] || room['key']
+                room_name = room.name || room.key
 
                 # Output a graph edge for every exit from the room.
                 # TODO: We will end up duplicating edges.
-                room['exits'].each do |exit|
+                room.exits.each do |exit|
 
                     # Exit may look like '42' or { secret: '42' }
                     dest_key = exit.is_a?(Hash) ? exit.values.first : exit
 
                     # Use the name, rather than key, of the destination if possible.
                     # This has to match the name we use for this node elsewhere (i.e. for its exits).
-                    dest_name = @dungeon.rooms_by_key[dest_key] && @dungeon.rooms_by_key[dest_key]['name'] || dest_key
+                    dest_name = @dungeon.rooms_by_key[dest_key] && @dungeon.rooms_by_key[dest_key].name || dest_key
 
                     output_file.puts("    #{node_name(room_name)} -- #{node_name(dest_name)};")
                 end
