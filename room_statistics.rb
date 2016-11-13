@@ -21,7 +21,7 @@ module Aeldardin
         # Display the statistics.
         # TODO: should probably be part of a separate presentational class.
         def to_s
-            format_stats(stats_tree, '')
+            format_stats(stats_tree, '').join("\n")
         end
 
         private
@@ -70,27 +70,34 @@ module Aeldardin
         # @param tree [Hash] The stats tree, as returned by (#see calculate)
         # @param indent [String] The indentation prefix -- two spaces are appended for each nesting level.
         def format_stats(tree, indent)
-            formatted_regions = tree[:regions].map do |name, details|
+            stats_strings = []
+
+            tree[:regions].each do |name, details|
 
                 # Recurse. Again, base case is when we have no child regions.
                 child_indent = indent + '  '
                 child_stats = format_stats(details, child_indent)
-                "#{indent}#{name}: #{child_stats}"
+
+                stats_strings << "#{indent}#{name}:"
+                stats_strings += child_stats
             end
 
             # Format our local and aggregate stats.
             # TODO: needs to be more flexible.
 
-            # Only show local count if present; only show aggregate if there are children to count.
-            local_stats = "#{indent}#{tree[:local][:all_rooms]} rooms locally" if tree[:local][:all_rooms] > 0
-            aggregate_stats = "#{indent}#{tree[:aggregate][:all_rooms]} rooms" if tree[:aggregate][:all_rooms] != tree[:local][:all_rooms]
+            # Only show local count if present
+            if tree[:local][:all_rooms] > 0
+                stats_strings << "#{indent}#{tree[:local][:all_rooms]} rooms locally"
+            end
 
+            # Only show aggregate count if there were rooms in child regions
+            if tree[:aggregate][:all_rooms] != tree[:local][:all_rooms]
+                stats_strings << "#{indent}#{tree[:aggregate][:all_rooms]} rooms"
+            end
 
-            [
-                formatted_regions.flatten,
-                local_stats,
-                aggregate_stats
-            ].join("\n")
+            puts stats_strings.inspect
+            stats_strings
+
         end
     end
 end
