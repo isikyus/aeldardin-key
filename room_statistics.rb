@@ -36,21 +36,33 @@ module Aeldardin
             end
 
             # Terminal case -- calculate stats for these rooms.
-            local_stats = {
-                :count => dungeon.local_rooms && dungeon.local_rooms.length || 0
-            }
 
-            # Totals for child regions.
-            child_room_count = recursive_stats.values.map { |h| h[:aggregate][:count] }.inject(&:+)
-            child_room_count ||= 0
+            # Create a hash where every value starts out as 0, so we can use += safely.
+            local_stats = Hash.new { |h, k| h[k] = 0 }
+
+            # Count each room for the overall total and its particular type.
+            dungeon.local_rooms.each do |room|
+               local_stats[:all_rooms] += 1
+               local_stats[room.types] += 1
+            end
+
+            # Calculate aggregate totals by adding up counts for all types used by descendant rooms.
+            aggregate_stats = Hash.new { |h, k| h[k] = 0 }
+
+            recursive_aggregates = recursive_stats.values.map { |h| h[:aggregate] }
+            (recursive_aggregates + [local_stats]).each do |child_stats|
+               child_stats.each do |stat, subtotal|
+                  aggregate_stats[stat] += subtotal
+               end
+            end
 
             # Build and return the result:
+            puts local_stats.inspect
+            puts aggregate_stats.inspect
             {
                 :regions => recursive_stats,
                 :local => local_stats,
-                :aggregate => {
-                    :count => child_room_count + local_stats[:count]
-                }
+                :aggregate => aggregate_stats
             }
         end
 
@@ -70,8 +82,8 @@ module Aeldardin
             # TODO: needs to be more flexible.
 
             # Only show local count if present; only show aggregate if there are children to count.
-            local_stats = "#{indent}#{tree[:local][:count]} rooms locally" if tree[:local][:count] > 0
-            aggregate_stats = "#{indent}#{tree[:aggregate][:count]} rooms" if tree[:aggregate][:count] != tree[:local][:count]
+            local_stats = "#{indent}#{tree[:local][:all_rooms]} rooms locally" if tree[:local][:all_rooms] > 0
+            aggregate_stats = "#{indent}#{tree[:aggregate][:all_rooms]} rooms" if tree[:aggregate][:all_rooms] != tree[:local][:all_rooms]
 
 
             [
