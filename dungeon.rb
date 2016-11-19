@@ -38,7 +38,7 @@ module Aeldardin
             end
 
             def exits
-                @data['exits']
+                @data['exits'] || []
             end
 
             # Similar to Gygax's room-type table in the OD&D random-dungeon rules
