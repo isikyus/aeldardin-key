@@ -22,10 +22,11 @@ module Aeldardin
                 title = "## #{room.key}."
                 title << " #{room.name}" if room.name
                 output_file.puts(title)
+                output_file.puts
                 
                 if room.description
-                    output_file.puts
                     output_file.puts room.description
+                    output_file.puts
                 end
 
                 room.objects.each do |object|
@@ -36,9 +37,9 @@ module Aeldardin
                     if object[:description]
                         output_file.puts("  #{object[:description]}")
                     end
-                    
-                    output_file.puts
                 end
+
+                output_file.puts
             end
         end
 
