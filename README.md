@@ -13,6 +13,12 @@ Convert to a .dot graph:
 
     ruby aeldardin-to-dot.rb dungeon.yml > output.dot
 
+Convert to a Markdown-formatted dungeon key:
+
+    ruby aeldardin-to-dot.rb dungeon.yml > output.md
+
+(or pipe output through your favourite Markdown processor to get HTML, etc.)
+
 Calculate dungeon statistics (room counts):
 
     ruby room_statistics.rb dungeon.yml
