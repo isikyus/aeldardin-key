@@ -24,7 +24,7 @@ It is, after all, a lot of effort to type up a dungeon key in a strict format li
 
 Two things motivate me to build this:
 
-Firstly, Dungeons keys are fundamentally structured data (see Peter Alexandrian's series on writing them).
+Firstly, Dungeons keys are fundamentally structured data (see [Justin Alexander's series on them](http://thealexandrian.net/wordpress/35180/roleplaying-games/the-art-of-the-key)).
 Since I'm obsessed with style-and-content separation, I want to work on the structure -- the _dungeon itself_ -- and not worry about formatting (how big should this heading be?) or structure (where should I put stat blocks?) until it comes time to publish the dungeon.
 
 Using a machine-readable format lets me automatically generate the final layout when the time comes, without having to decide on it ahead of time.
@@ -61,5 +61,7 @@ TODO: write up a formal schema of some kind.
         * `coin` (denomination): Denomination of coin. `item` is unnecessary in this case.
         * `quantity` (number-or-die-roll): Number of this item in the room/carried by the monster.
         * `value` (number-or-die-roll): Value of one item (or of the whole lot of no quantity specified -- e.g. for coins).
+        * `weight` (number) weight per individual item.
+      * `objects` (array) -- details of non-item, non-trap things in the room. Can be plain strings, or hashes with keys `item` (first-glance description) and `description` (details noticed on investigating).
       * `trap` (array): Array of trap descriptions.
       * `description`: Text description of the room, excluding details that would go on one of the above keys.
