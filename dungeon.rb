@@ -37,8 +37,32 @@ module Aeldardin
                 @data['name']
             end
 
+            def description
+                @data['description']
+            end
+
             def exits
                 @data['exits'] || []
+            end
+
+            # Returns a list of the objects in the room,
+            # each as a hash with keys "item" (brief description), and
+            # "description" (what's noticed upon investigation).
+            def objects
+                @objects ||= begin
+                    raw_objects = @data['objects'] || []
+                    raw_objects.map do |object|
+                       if object.is_a?(Hash)
+                           # TODO: assumes it has the right keys.
+                           object
+                       else
+                           {
+                               item: object,
+                               description: nil
+                           }
+                       end
+                    end
+                end
             end
 
             # Similar to Gygax's room-type table in the OD&D random-dungeon rules
