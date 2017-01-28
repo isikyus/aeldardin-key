@@ -2,8 +2,25 @@
 #
 # Script to convert Aeldardin-Key YAML files into Dot .gv files representing the connection graph of the dungeon.
 
+require 'dungeon'
+
 module Aeldardin
     class ToDot
+
+        def self.run
+            case ARGV.length
+            when 0
+                input_file = STDIN
+            when 1
+                input_file = File.open(ARGV[0], 'r')
+            else
+                STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
+                exit 1
+            end
+
+            dungeon = Aeldardin::Dungeon.load(input_file)
+            new(dungeon).generateDot(STDOUT)
+        end
 
         # @param [Aeldardin::Dungeon] dungeon The dungeon to render to Dot format.
         def initialize(dungeon)
@@ -53,18 +70,3 @@ module Aeldardin
         end
     end
 end
-
-case ARGV.length
-when 0
-    input_file = STDIN
-when 1
-    input_file = File.open(ARGV[0], 'r')
-else
-    STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
-    exit 1
-end
-
-require_relative 'dungeon'
-
-dungeon = Aeldardin::Dungeon.load(input_file)
-Aeldardin::ToDot.new(dungeon).generateDot(STDOUT)

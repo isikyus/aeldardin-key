@@ -9,19 +9,19 @@ this one models and processes dungeon _keys_.
 
 ## Usage:
 
-Convert to a .dot graph:
+Convert to a .dot (Graphviz) graph:
 
-    ruby aeldardin-to-dot.rb dungeon.yml > output.dot
+    bin/aeldardin-to-dot dungeon.yml > output.dot
 
 Convert to a Markdown-formatted dungeon key:
 
-    ruby aeldardin-to-dot.rb dungeon.yml > output.md
+    bin/aeldardin-to-key.rb dungeon.yml > output.md
 
 (or pipe output through your favourite Markdown processor to get HTML, etc.)
 
 Calculate dungeon statistics (room counts):
 
-    ruby room_statistics.rb dungeon.yml
+    bin/aeldardin-stats dungeon.yml
 
 ## Rationale
 
@@ -55,7 +55,7 @@ TODO: write up a formal schema of some kind.
     * `key` (id): Machine-readable, unique name for use elsewhere.
     * `to` (idref): ID of the zone the connection leads to. (Not the exact room, which is determined by the exits list in the zone).
     * `description` (text)
-  * `region` (array): An area of the zone with mapped dungeon rooms
+  * `regions` (array): An area of the zone with mapped dungeon rooms
     * `name` (string): Descriptive name of the region
     * `rooms` (array):
       * `key` (id): Map key number of the room. Must be unique within a zone (TODO: why this scope?)
