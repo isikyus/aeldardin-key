@@ -14,7 +14,7 @@ module Aeldardin
           when 1
               input_file = File.open(ARGV[0], 'r')
           else
-              STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
+              STDERR.puts "Usage: #{$PROGRAM_NAME} [<filename.yml>]"
               exit 1
           end
 
