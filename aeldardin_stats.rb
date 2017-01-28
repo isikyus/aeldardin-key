@@ -1,9 +1,28 @@
 # File: aeldardin-to-dot.rb
 #
 # Script to calculate statistics over the rooms in a dungeon.
+require 'dungeon'
 
 module Aeldardin
     class Stats
+
+        def self.run
+          # TODO: duplicated in Aeldardin::ToDot code.
+          case ARGV.length
+          when 0
+              input_file = STDIN
+          when 1
+              input_file = File.open(ARGV[0], 'r')
+          else
+              STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
+              exit 1
+          end
+
+          dungeon = Aeldardin::Dungeon.load(input_file)
+
+          puts "Statistics for '#{dungeon.title}':"
+          puts Aeldardin::Stats.new(dungeon).to_s
+        end
 
         # @param [Aeldardin::Dungeon] dungeon The dungeon to render to Dot format.
         def initialize(dungeon)
@@ -115,21 +134,3 @@ module Aeldardin
         end
     end
 end
-
-# TODO: duplicated in Aeldardin::ToDot code.
-case ARGV.length
-when 0
-    input_file = STDIN
-when 1
-    input_file = File.open(ARGV[0], 'r')
-else
-    STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
-    exit 1
-end
-
-require_relative 'dungeon'
-
-dungeon = Aeldardin::Dungeon.load(input_file)
-
-puts "Statistics for '#{dungeon.title}':"
-puts Aeldardin::Stats.new(dungeon).to_s

@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# Preceding and following lines modified from Aruba executable at https://github.com/cucumber/aruba/blob/master/bin/aruba
+$LOAD_PATH << File.expand_path('../..', __FILE__)
+
+require 'aeldardin-to-dot'
+
+Aeldardin::ToDot.run

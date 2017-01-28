@@ -3,8 +3,25 @@
 # Converts Aeldardin-Key YAML into Markdown describing the dungeon;
 # this aims to be a key you could actually run the adventure from.
 
+require 'dungeon'
+
 module Aeldardin
     class ToKey
+
+        def self.run
+          case ARGV.length
+          when 0
+              input_file = STDIN
+          when 1
+              input_file = File.open(ARGV[0], 'r')
+          else
+              STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
+              exit 1
+          end
+
+          dungeon = Aeldardin::Dungeon.load(input_file)
+          Aeldardin::ToKey.new(dungeon).generateMarkdown(STDOUT)
+        end
 
         # @param [Aeldardin::Dungeon] dungeon The dungeon to render to Dot format.
         def initialize(dungeon)
@@ -46,18 +63,3 @@ module Aeldardin
         private
     end
 end
-
-case ARGV.length
-when 0
-    input_file = STDIN
-when 1
-    input_file = File.open(ARGV[0], 'r')
-else
-    STDERR.puts "Usage: #{__FILE__} [<filename.yml>]"
-    exit 1
-end
-
-require_relative 'dungeon'
-
-dungeon = Aeldardin::Dungeon.load(input_file)
-Aeldardin::ToKey.new(dungeon).generateMarkdown(STDOUT)
