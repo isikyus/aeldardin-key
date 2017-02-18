@@ -1,0 +1,5 @@
+#!/bin/bash
+# Just a wrapper for aeldardin.js so it can be run by Aruba
+
+# We need to go up to the containing directory because of how Aruba runs this script.
+node $0/../../aeldardin.js "$@"

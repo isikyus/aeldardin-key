@@ -48,7 +48,7 @@ Feature: Convert key YAML files to dot graphs
     """
 
   Scenario: Using Ruby implementation
-    When I successfully run `aeldardin-to-dot dungeon.yml`
+    When I successfully run `aeldardin dot dungeon.yml`
     Then the output should contain exactly:
     """
     graph Test_Dungeon {
