@@ -16,7 +16,7 @@ requirejs.config({
 requirejs([
     'js-yaml',
     'fs', // TODO: do I actually need this?
-    'to_dot'
+    'to_dot',
   ],
 function (yaml, fs, toDot) {
 
@@ -32,15 +32,14 @@ function (yaml, fs, toDot) {
   var loadKeyFromFile = function(filename, callback) {
     fs.readFile(filename, 'utf8', function(err, data) {
 
-      var key;
+      var data;
 
       if (err) {
         throw err
       } else {
 
         try {
-          key = toDot(yaml.safeLoad(data));
-          callback(key);
+          callback(yaml.safeLoad(data));
 
         } catch(e) {
           if (e instanceof yaml.YAMLException) {
@@ -58,8 +57,8 @@ function (yaml, fs, toDot) {
   }
 
   var convertToDot = function(filename) {
-    loadKeyFromFile(filename, function(key) {
-      toDot(key);
+    loadKeyFromFile(filename, function(data) {
+      toDot(data);
     });
   };
 
