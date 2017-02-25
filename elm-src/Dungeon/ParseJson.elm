@@ -6,11 +6,13 @@ module Dungeon.ParseJson exposing (decodeDungeon)
 import Dungeon exposing (..)
 import Json.Decode exposing (..)
 
+dungeon : Decoder Dungeon
 dungeon =
   map2 Dungeon
     (field "title" string)
     (field "zones" (list zone))
 
+zone : Decoder Zone
 zone =
   map2 Zone
     (field "rooms" (list room))
@@ -20,8 +22,10 @@ zone =
       ]
     )
 
+regions : Decoder Regions
 regions = map Regions (list (lazy (\_ -> zone)))
 
+room : Decoder Room
 room =
   map3 Room
     (field "key" string)
@@ -43,9 +47,11 @@ unwrapSingleton list =
     first :: second :: rest ->
       fail "Expected a one-field object for door type, got two or more fields"
 
+
 -- Exits can be a bare <key>, or a pair like <type>: <key>, where <type>
 -- is an arbitrary string describing how the exit works (door, secret, "magical portal", etc.)
 -- In the former case, the type is assumed to be "door".
+exit : Decoder Connection
 exit =
   oneOf
     [ map2 Connection (succeed "door") string
