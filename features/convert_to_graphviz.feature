@@ -52,15 +52,15 @@ Feature: Convert key YAML files to dot graphs
     Then the output should contain exactly:
     """
     graph Test_Dungeon {
-        node_Main_Entrance -- node_surface;
-        node_Main_Entrance -- node_Storage_Room;
-        node_Main_Entrance -- node_Hallway;
-        node_Main_Entrance -- node_Guard_Room;
-        node_Storage_Room -- node_Main_Entrance;
-        node_Hallway -- node_Guard_Room;
-        node_Hallway -- node_Main_Entrance;
-        node_Guard_Room -- node_Hallway;
-        node_Guard_Room -- node_Main_Entrance;
         node_Guard_Room -- node_basement2;
+        node_Guard_Room -- node_Main_Entrance;
+        node_Guard_Room -- node_Hallway;
+        node_Hallway -- node_Main_Entrance;
+        node_Hallway -- node_Guard_Room;
+        node_Storage_Room -- node_Main_Entrance;
+        node_Main_Entrance -- node_Guard_Room;
+        node_Main_Entrance -- node_Hallway;
+        node_Main_Entrance -- node_Storage_Room;
+        node_Main_Entrance -- node_surface;
     }
     """

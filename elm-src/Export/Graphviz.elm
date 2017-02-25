@@ -31,8 +31,12 @@ exitsToEdges room zone =
   List.map
     ( \exit ->
       edge
-        ( toIdentifier "node_" ++ room.name )
-        ( toIdentifier "node_" ++ (nameForKey exit.destination zone) )
+        ( toIdentifier ("node_" ++ room.name) )
+        ( toIdentifier
+          ( "node_"
+            ++ (nameForKey exit.destination zone)
+          )
+        )
     )
     room.exits
 
