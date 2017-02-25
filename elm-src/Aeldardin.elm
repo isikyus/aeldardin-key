@@ -3,14 +3,19 @@ port module Aeldardin exposing (main)
 -- Very roughly based on https://gist.github.com/evancz/e69723b23958e69b63d5b5502b0edf90
 -- and https://github.com/ElmCast/elm-node/blob/master/example/Example.elm
 
+-- Needed to define port modules, apparently.
+import Json.Decode
+
+-- Imports to set up program
+-- TODO: not sure if all of these are used.
 import Platform
 import Platform.Cmd as Cmd
 import Platform.Sub as Sub
 import Task
 
--- Needed to define port modules, apparently.
-import Json.Decode
-
+-- Load Aeldardin libraries.
+import Dungeon exposing (Dungeon)
+import Dungeon.ParseJson
 
 main : Program Never Model Msg
 main =
@@ -40,7 +45,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     ToDot jsonString ->
-      case Json.Decode.decodeString dungeonDecoder jsonString of
+      case Dungeon.ParseJson.decodeDungeon jsonString of
         Ok dungeon ->
           ( model, done ( dungeonToDot dungeon ) )
 
@@ -61,14 +66,6 @@ subscriptions model =
 
 
 -- TODO: functions to be moved to other files.
-
--- DUNGEON TYPES
-
-type alias Dungeon =
-  { title : String
-  }
-
-dungeonDecoder = Json.Decode.map Dungeon ( Json.Decode.field "title" Json.Decode.string )
 
 -- CONVERSION TO ToDot
 
