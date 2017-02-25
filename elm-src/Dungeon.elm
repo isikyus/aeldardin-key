@@ -46,6 +46,9 @@ localRooms zone =
 
 -- Look up a room by key.
 -- Takes a zone because the README says keys are only unique within a zone.
+--
+-- Does not check the key given actually exists in this zone.
+--
 -- TODO: assumes keys are unique, which we don't know yet.
 findRoom : String -> Zone -> Maybe Room
 findRoom key zone =

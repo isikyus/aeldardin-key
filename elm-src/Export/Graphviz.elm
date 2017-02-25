@@ -2,27 +2,50 @@ module Export.Graphviz exposing (toGraphviz)
 
 import Dungeon exposing (..)
 
--- Convert a dungeon to Graphviz's .gv format (which can then be rendered as an image)
+-- Convert a dungeon to Graphviz's .gv format
+-- (which can then be rendered as an image)
 toGraphviz : Dungeon -> String
 toGraphviz dungeon =
   "graph " ++ (toIdentifier dungeon.title) ++ " {\n" ++
   ( List.foldl
       String.append
       ""
-      ( List.concatMap
-        toEdges
-        (Dungeon.rooms dungeon)
-      )
+      (List.concatMap allExitsToEdges dungeon.zones)
   ) ++
   "}"
 
 
--- Convert a the exits of a room to a series of strings representing Graphviz edges.
-toEdges : Room -> List String
-toEdges room =
+-- Generate all edge declarations for exits of rooms in a given zone.
+allExitsToEdges : Zone -> List String
+allExitsToEdges zone =
+  List.concatMap
+    (\room -> exitsToEdges room zone)
+    (Dungeon.localRooms zone)
+
+
+-- Convert a the exits of a room to a series of strings,
+-- representing Graphviz edges.
+-- Takes the containing zone as well, so we can show room names.
+exitsToEdges : Room -> Zone -> List String
+exitsToEdges room zone =
   List.map
-    (\exit -> edge room.key exit.destination)
+    ( \exit ->
+      edge
+        ( toIdentifier "node_" ++ room.name )
+        ( toIdentifier "node_" ++ (nameForKey exit.destination zone) )
+    )
     room.exits
+
+
+-- Try to find the correct name for a given room key.
+nameForKey : String -> Zone -> String
+nameForKey key scope =
+  case (Dungeon.findRoom key scope) of
+    Nothing ->
+      key
+
+    Just room ->
+      room.name
 
 
 -- Generate Graphviz notation for an edge between two named nodes.
@@ -30,11 +53,14 @@ edge : String -> String -> String
 edge start end =
   "    " ++ start ++ " -- " ++ end ++ ";\n"
 
+
 -- Convert a string to a valid Graphviz identifier,
 -- by replacing spaces with underscores.
 --
--- Modified from the String.map example at http://package.elm-lang.org/packages/elm-lang/core/latest/String ,
+-- Modified from the String.map example at
+-- http://package.elm-lang.org/packages/elm-lang/core/latest/String ,
 -- which is copyright Evan Czaplicki.
+--
 -- TODO: should also handle other non-identifier characters.
 -- TODO: not guaranteed to preserve uniqueness
 toIdentifier : String -> String
