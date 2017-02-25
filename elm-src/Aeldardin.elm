@@ -16,6 +16,7 @@ import Task
 -- Load Aeldardin libraries.
 import Dungeon exposing (Dungeon)
 import Dungeon.ParseJson
+import Export.Graphviz
 
 main : Program Never Model Msg
 main =
@@ -47,7 +48,7 @@ update msg model =
     ToDot jsonString ->
       case Dungeon.ParseJson.decodeDungeon jsonString of
         Ok dungeon ->
-          ( model, done ( dungeonToDot dungeon ) )
+          ( model, done ( Export.Graphviz.toGraphviz dungeon ) )
 
         -- TODO: return errors using their own port.
         Err message ->
@@ -63,12 +64,3 @@ port toDot : (String -> msg) -> Sub msg
 subscriptions : Model -> Sub Msg
 subscriptions model =
   toDot ToDot
-
-
--- TODO: functions to be moved to other files.
-
--- CONVERSION TO ToDot
-
-dungeonToDot : Dungeon -> String
-dungeonToDot dungeon =
-  "graph " ++ dungeon.title ++ " { }"
