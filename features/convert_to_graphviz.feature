@@ -19,7 +19,7 @@ Feature: Convert key YAML files to dot graphs
     title: Test Dungeon
 
     zones:
-    - id: level1
+    - id: basement1
       name: Basement One
       rooms:
       - key: entrance

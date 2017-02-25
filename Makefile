@@ -1,5 +1,5 @@
 
-test : aeldardin-elm.js
+test : aeldardin-elm.js features/*.feature features/support/*.rb
 	cucumber
 
 # Depend on all Elm source files -- see http://stackoverflow.com/questions/14289513/makefile-rule-that-depends-on-all-files-under-a-directory-including-within-subd
