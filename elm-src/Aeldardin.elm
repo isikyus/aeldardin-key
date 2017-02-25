@@ -3,18 +3,16 @@ port module Aeldardin exposing (main)
 -- Very roughly based on https://gist.github.com/evancz/e69723b23958e69b63d5b5502b0edf90
 -- and https://github.com/ElmCast/elm-node/blob/master/example/Example.elm
 
--- Needed to define port modules, apparently.
-import Json.Decode
+-- Needed to define port modules -- but apparently it's enough to require Dungeon.ParseJson, which itself depends on this.
+-- import Json.Decode
 
 -- Imports to set up program
 -- TODO: not sure if all of these are used.
 import Platform
 import Platform.Cmd as Cmd
 import Platform.Sub as Sub
-import Task
 
 -- Load Aeldardin libraries.
-import Dungeon exposing (Dungeon)
 import Dungeon.ParseJson
 import Export.Graphviz
 
