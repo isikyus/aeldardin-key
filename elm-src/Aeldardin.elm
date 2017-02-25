@@ -38,14 +38,14 @@ type Model = EmptyModel
 
 type Msg
   = Done
-  | ToDot (String)
+  | ToGraphviz (String)
 
 port done : String -> Cmd msg
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    ToDot jsonString ->
+    ToGraphviz jsonString ->
       case Dungeon.ParseJson.decodeDungeon jsonString of
         Ok dungeon ->
           ( model, done ( Export.Graphviz.toGraphviz dungeon ) )
@@ -59,8 +59,8 @@ update msg model =
 
 -- SUBSCRIPTIONS
 
-port toDot : (String -> msg) -> Sub msg
+port toGraphviz : (String -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  toDot ToDot
+  toGraphviz ToGraphviz

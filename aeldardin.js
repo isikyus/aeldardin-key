@@ -16,9 +16,9 @@ requirejs.config({
 requirejs([
     'js-yaml',
     'fs', // TODO: do I actually need this?
-    'to_dot',
+    'to_graphviz',
   ],
-function (yaml, fs, toDot) {
+function (yaml, fs, toGraphviz) {
 
   var showUsage = function() {
     var command = process.argv0 + ' ' + process.argv[1];
@@ -56,9 +56,9 @@ function (yaml, fs, toDot) {
     });
   }
 
-  var convertToDot = function(filename) {
+  var convertToGraphviz = function(filename) {
     loadKeyFromFile(filename, function(data) {
-      toDot(data);
+      toGraphviz(data);
     });
   };
 
@@ -71,8 +71,8 @@ function (yaml, fs, toDot) {
   // Call an appropriate operation for the command given.
   switch(subcommand) {
 
-    case 'dot':
-      convertToDot(filename);
+    case 'gv':
+      convertToGraphviz(filename);
       break;
 
     default:

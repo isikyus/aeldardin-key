@@ -1,4 +1,4 @@
-// File: to_dot.js
+// File: to_graphviz.js
 //
 // Code to convert an Aeldardin key into a .dot graph file.
 
@@ -21,6 +21,6 @@ function (Elm) {
     // Send Elm JSON rather than a full JS object, so we can re-parse in Elm
     // to extract only the things we know how to handle.
     // TODO: would be better to send the YAML to Elm directly, but Elm can't parse YAML yet (https://groups.google.com/forum/#!topic/elm-discuss/s8dy6zlQaYM)
-    worker.ports.toDot.send(JSON.stringify(data));
+    worker.ports.toGraphviz.send(JSON.stringify(data));
   };
 });
