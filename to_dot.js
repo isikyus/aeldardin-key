@@ -18,6 +18,9 @@ function (Elm) {
     };
     worker.ports.done.subscribe(printOnce);
 
-    worker.ports.toDot.send(data.title);
+    // Send Elm JSON rather than a full JS object, so we can re-parse in Elm
+    // to extract only the things we know how to handle.
+    // TODO: would be better to send the YAML to Elm directly, but Elm can't parse YAML yet (https://groups.google.com/forum/#!topic/elm-discuss/s8dy6zlQaYM)
+    worker.ports.toDot.send(JSON.stringify(data));
   };
 });

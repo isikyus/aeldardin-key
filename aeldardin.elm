@@ -40,7 +40,13 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     ToDot jsonString ->
-      ( model, done (jsonString ++ "a") )
+      case Json.Decode.decodeString dungeonDecoder jsonString of
+        Ok dungeon ->
+          ( model, done ( dungeonToDot dungeon ) )
+
+        -- TODO: return errors using their own port.
+        Err message ->
+          ( model, done message )
 
     Done ->
       ( model, Cmd.none )
@@ -52,3 +58,20 @@ port toDot : (String -> msg) -> Sub msg
 subscriptions : Model -> Sub Msg
 subscriptions model =
   toDot ToDot
+
+
+-- TODO: functions to be moved to other files.
+
+-- DUNGEON TYPES
+
+type alias Dungeon =
+  { title : String
+  }
+
+dungeonDecoder = Json.Decode.map Dungeon ( Json.Decode.field "title" Json.Decode.string )
+
+-- CONVERSION TO ToDot
+
+dungeonToDot : Dungeon -> String
+dungeonToDot dungeon =
+  "graph " ++ dungeon.title ++ " { }"
