@@ -70,6 +70,7 @@ exit =
           )
     ]
 
+-- TODO: should validate room IDs are unique.
 decodeDungeon : String -> Result String Dungeon
 decodeDungeon jsonString =
   decodeString dungeon jsonString

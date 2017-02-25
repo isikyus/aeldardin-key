@@ -1,4 +1,4 @@
-module Dungeon exposing (Dungeon, Room, Zone, Regions(..), Connection, rooms)
+module Dungeon exposing (Dungeon, Room, Zone, Regions(..), Connection, rooms, localRooms, findRoom)
 
 -- Types representing an Aeldardin dungeon.
 -- These may eventually need to be parametric or something to allow addons with their own types.
@@ -43,3 +43,27 @@ localRooms zone =
   ( (\(Regions zones) -> List.concatMap localRooms zones)
     zone.regions
   )
+
+-- Look up a room by key.
+-- Takes a zone because the README says keys are only unique within a zone.
+-- TODO: assumes keys are unique, which we don't know yet.
+findRoom : String -> Zone -> Maybe Room
+findRoom key zone =
+  let
+    matchingRooms =
+      List.filter
+        (\room -> room.key == key)
+        (localRooms zone)
+  in
+    case matchingRooms of
+      [] ->
+        Nothing
+
+      [ room ] ->
+        (Just room)
+
+      room :: rest ->
+        Nothing
+        -- TODO: should be an error but the calling code isn't prepared to handle it;
+        -- we really should validate this in the initial JSON parse.
+        -- Err ( "The key '" ++ key ++  "' seems to have been used for more than one room.")
