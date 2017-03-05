@@ -16,3 +16,4 @@ elm-test : ${ELM_SOURCES} ${ELM_TEST_SOURCES} tests/elm-package.json
 
 tests/elm-package.json : elm-package.json tests/elm-package-template.json
 	node update-test-dependencies.js
+	cd tests && node ../node_modules/.bin/elm-package install -y
