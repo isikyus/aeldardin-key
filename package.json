@@ -4,6 +4,7 @@
   "description": "Tools to work with dungeon keys written in YAML",
   "main": "aeldardin-elm.js",
   "dependencies": {
+    "elm": "^0.18.0",
     "elm-test": "^0.18.2",
     "js-yaml": "^3.7.0",
     "requirejs": "^2.3.2"
