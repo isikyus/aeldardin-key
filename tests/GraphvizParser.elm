@@ -1,4 +1,4 @@
-module GraphvizParser exposing (tests, expectValidGraphviz, graph, Graph)
+module GraphvizParser exposing (tests, expectValidGraphviz, validId, graph, Graph)
 
 -- A parser for a subset of the Graphviz DOT language, and tests for it.
 -- This lives in the tests because I only need it to test Graphviz export.
@@ -10,6 +10,9 @@ import String
 
 -- Seem to need exposing (..) for operators; TODO: check
 import Combine as P exposing(..)
+
+-- Need Random.maxInt for generating numeric IDs
+import Random
 
 
 -- Parser for a subset of the Graphviz file format.
@@ -118,7 +121,9 @@ multiLineWhitespace : Parser s (List String)
 multiLineWhitespace =
   P.many1 ( P.choice [ P.whitespace, P.string "\n" ])
 
+
 -- Custom expectations
+
 -- TODO: how do I shorten a really long type annotation? Should I be importing aliases?
 expectParseOk : (value -> Expect.Expectation) -> Result (state, P.InputStream, List String) (state, stream, value) -> Expect.Expectation
 expectParseOk expectedOutput result =
@@ -151,7 +156,54 @@ expectValidGraphviz graphvizOutput =
     |> expectParseOk (\_ -> Expect.pass)
 
 
+-- Helper fuzzer-builder that samples uniformly from a list.
+sample : List a -> Fuzz.Fuzzer a
+sample values =
+  Fuzz.frequencyOrCrash
+    ( List.map
+      ( \a -> (1, Fuzz.constant a) )
+      values
+    )
 
+
+-- Helper fuzzers to generate valid characters for identifiers.
+
+-- Valid first characters for (non-numeric, non-quoted, non-HTML) Graphviz identifiers
+-- TODO: I'd like some way to build this using a loop, but Elm seems
+-- to lack any way to loop over characters.
+validIdFirstChars =
+  [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'
+  , 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+  , 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'
+  , 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+  , '_'
+  ]
+
+validIdChars =
+  validIdFirstChars
+    ++ [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ]
+
+-- Generate a valid non-numeric identifier
+validNonNumericId : Fuzz.Fuzzer String
+validNonNumericId =
+  ( Fuzz.map2
+    (::)
+    ( sample validIdFirstChars )
+    ( Fuzz.list (sample validIdChars) )
+  )
+  |> Fuzz.map String.fromList
+
+-- A fuzzer guaranteed to generate a valid node ID
+-- (that won't require quotes, etc.)
+validId : Fuzz.Fuzzer String
+validId =
+  Fuzz.frequencyOrCrash
+    [ ( 1,
+        Fuzz.intRange 0 Random.maxInt
+          |> Fuzz.map toString
+      )
+    , ( 1, validNonNumericId )
+    ]
 
 tests : Test
 tests =

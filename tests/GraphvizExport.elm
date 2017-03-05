@@ -5,7 +5,7 @@ import Expect
 import Fuzz exposing (list, int, tuple, string)
 import String
 
-import GraphvizParser
+import GraphvizParser exposing (validId, expectValidGraphviz)
 
 import Dungeon as D
 import Export.Graphviz
@@ -47,15 +47,37 @@ dungeon =
 all : Test
 all =
   describe "Graphviz export"
-    [ ]
-      -- Un-quoted Graphviz identifiers are limited to alphanumerics + _,
+    [ -- Un-quoted Graphviz identifiers are limited to alphanumerics + _,
       -- and either start with a non-numeral (like C identifiers)
       -- or consist only of numerals.
       -- TODO: avoid all this by using _quoted_ identifiers instead.
-  --    [ fuzz dungeon "Node names only contain 'identifier' characters" <|
-  --        \d -> Export.Graphviz.toGraphviz d
-  --          |> expectValidGraphviz
+      fuzz validId "Graph title only contains 'identifier' characters" <|
+        \title -> D.Dungeon title []
+          |> Export.Graphviz.toGraphviz
+          |> expectValidGraphviz
 
+    , fuzz dungeon "Node names only contain 'identifier' characters" <|
+        \d -> Export.Graphviz.toGraphviz d
+          |> expectValidGraphviz
+
+    , fuzz3 validId validId validId "All edges are represented in the output graph" <|
+        \node1 -> \node2 -> \node3 ->
+          dungeonWithRoomsNamed [node1, node2, node3]
+          |> Export.Graphviz.toGraphviz
+          |>
+            \graph ->
+              Expect.equal
+                graph
+                ( "graph Test_Dungeon_with_rooms_for_names {\n"
+                  ++ "    node_" ++ node1 ++ " -- node_" ++ node2 ++ ";\n"
+                  ++ "    node_" ++ node1 ++ " -- node_" ++ node3 ++ ";\n"
+                  ++ "    node_" ++ node2 ++ " -- node_" ++ node1 ++ ";\n"
+                  ++ "    node_" ++ node2 ++ " -- node_" ++ node3 ++ ";\n"
+                  ++ "    node_" ++ node3 ++ " -- node_" ++ node1 ++ ";\n"
+                  ++ "    node_" ++ node3 ++ " -- node_" ++ node2 ++ ";\n"
+                  ++ "}"
+                )
+    ]
 --         , describe "Unit test examples"
 --             [ test "Addition" <|
 --                 \() ->
@@ -81,4 +103,3 @@ all =
 --                 \s1 s2 ->
 --                     s1 ++ s2 |> String.length |> Expect.equal (String.length s1 + String.length s2)
 --             ]
-  --      ]
