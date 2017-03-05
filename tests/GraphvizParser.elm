@@ -34,13 +34,13 @@ type alias Graph =
 graph : P.Parser () Graph
 graph =
   P.skip (P.string "graph")
-    *> P.whitespace
+    *> multiLineWhitespace
     *> idString
     |> P.map Graph
     |> P.andMap
-      ( P.whitespace
+      ( multiLineWhitespace
         *> ( P.braces statementList)
-        <* P.whitespace
+        <* multiLineWhitespace
         <* P.end
       )
 
@@ -53,7 +53,7 @@ graph =
 -- and following (possibly empty) statement list.
 statementList : P.Parser () (List Edge)
 statementList =
-  P.whitespace
+  multiLineWhitespace
     *>
       ( ( P.sepEndBy
           (P.whitespace *> P.maybe (P.string ";") <* P.whitespace)
@@ -61,7 +61,7 @@ statementList =
         )
         |> P.mapError ( (++) ["Expected a semicolon-separated list of statements"] )
       )
-    <* P.whitespace
+    <* multiLineWhitespace
 
 
 -- stmt, defined as:
@@ -84,9 +84,9 @@ statementList =
 statement : P.Parser () Edge
 statement =
   idString
-    <* P.whitespace
+    <* multiLineWhitespace
     <* P.string "--"
-    <* P.whitespace
+    <* multiLineWhitespace
 
     -- (,) is the constructor for two-tuples, such as Edge
     |> P.map (,)
@@ -113,8 +113,10 @@ idString =
   ]
 
 
-
-
+-- Match whitespace that can include newlines (but must be present)
+multiLineWhitespace : Parser s (List String)
+multiLineWhitespace =
+  P.many1 ( P.choice [ P.whitespace, P.string "\n" ])
 
 -- Custom expectations
 -- TODO: how do I shorten a really long type annotation? Should I be importing aliases?
@@ -156,7 +158,7 @@ tests =
   describe "Graphviz parser"
     [ test "Parsing an empty graph" <|
       \() ->
-        P.parse graph "graph title {}"
+        P.parse graph "graph title {\n}"
           |> expectParseOk
               (\result -> Expect.equal
                 result
