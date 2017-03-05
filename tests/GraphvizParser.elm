@@ -110,8 +110,6 @@ idString =
 
     -- Numbers
   , P.regex "[0-9]+"
-  , P.string "a"
-  , P.string "b"
   ]
 
 
@@ -160,7 +158,7 @@ tests =
       \() ->
         P.parse graph "graph title {}"
           |> expectParseOk
-              (\result -> Expect.equal 
+              (\result -> Expect.equal
                 result
                 (Graph "title" [])
               )
@@ -169,7 +167,7 @@ tests =
       \() ->
       P.parse graph "graph title { a -- b; b -- a }"
           |> expectParseOk
-              (\result -> Expect.equal 
+              (\result -> Expect.equal
                 result
                 ( Graph
                   "title"
