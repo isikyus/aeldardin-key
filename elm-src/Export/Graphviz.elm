@@ -7,11 +7,11 @@ import Dungeon exposing (..)
 toGraphviz : Dungeon -> String
 toGraphviz dungeon =
   "graph " ++ (toIdentifier dungeon.title) ++ " {\n" ++
-  ( List.foldl
+    ( List.foldl
       String.append
       ""
       (List.concatMap allExitsToEdges dungeon.zones)
-  ) ++
+    ) ++
   "}"
 
 
