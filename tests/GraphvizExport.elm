@@ -58,30 +58,32 @@ all =
           |> Export.Graphviz.toGraphviz
           |> expectValidGraphviz
 
-    , fuzzWith {runs = 5 } dungeon "Node names only contain 'identifier' characters" <|
-        \d -> Export.Graphviz.toGraphviz d
-          |> expectValidGraphviz
+    , fuzz3 string string string "Node names only contain 'identifier' characters" <|
+        \room1 -> \room2 -> \room3 ->
+          dungeonWithRoomsNamed [room1, room2, room3]
+            |> Export.Graphviz.toGraphviz
+            |> expectValidGraphviz
 
     , fuzz3 validId validId validId "All edges are represented in the output graph" <|
         \node1 -> \node2 -> \node3 ->
 
           -- Pass in rooms names in reverse order, since the graph is generated backwards.
           dungeonWithRoomsNamed [node3, node2, node1]
-          |> Export.Graphviz.toGraphviz
-          |>
-            \graph ->
-              Expect.equal
-                graph
-                ( "graph Test_Dungeon_with_rooms_for_names {\n"
-                  ++ "    node_" ++ node1 ++ " -- node_" ++ node1 ++ ";\n"
-                  ++ "    node_" ++ node1 ++ " -- node_" ++ node2 ++ ";\n"
-                  ++ "    node_" ++ node1 ++ " -- node_" ++ node3 ++ ";\n"
-                  ++ "    node_" ++ node2 ++ " -- node_" ++ node1 ++ ";\n"
-                  ++ "    node_" ++ node2 ++ " -- node_" ++ node2 ++ ";\n"
-                  ++ "    node_" ++ node2 ++ " -- node_" ++ node3 ++ ";\n"
-                  ++ "    node_" ++ node3 ++ " -- node_" ++ node1 ++ ";\n"
-                  ++ "    node_" ++ node3 ++ " -- node_" ++ node2 ++ ";\n"
-                  ++ "    node_" ++ node3 ++ " -- node_" ++ node3 ++ ";\n"
-                  ++ "}"
-                )
+            |> Export.Graphviz.toGraphviz
+            |>
+              \graph ->
+                Expect.equal
+                  graph
+                  ( "graph Test_Dungeon_with_rooms_for_names {\n"
+                    ++ "    node_" ++ node1 ++ " -- node_" ++ node1 ++ ";\n"
+                    ++ "    node_" ++ node1 ++ " -- node_" ++ node2 ++ ";\n"
+                    ++ "    node_" ++ node1 ++ " -- node_" ++ node3 ++ ";\n"
+                    ++ "    node_" ++ node2 ++ " -- node_" ++ node1 ++ ";\n"
+                    ++ "    node_" ++ node2 ++ " -- node_" ++ node2 ++ ";\n"
+                    ++ "    node_" ++ node2 ++ " -- node_" ++ node3 ++ ";\n"
+                    ++ "    node_" ++ node3 ++ " -- node_" ++ node1 ++ ";\n"
+                    ++ "    node_" ++ node3 ++ " -- node_" ++ node2 ++ ";\n"
+                    ++ "    node_" ++ node3 ++ " -- node_" ++ node3 ++ ";\n"
+                    ++ "}"
+                  )
     ]

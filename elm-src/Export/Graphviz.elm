@@ -2,6 +2,9 @@ module Export.Graphviz exposing (toGraphviz)
 
 import Dungeon exposing (..)
 
+-- Needed to escape node names
+import Regex
+
 -- Convert a dungeon to Graphviz's .gv format
 -- (which can then be rendered as an image)
 toGraphviz : Dungeon -> String
@@ -69,6 +72,8 @@ edge start end =
 -- TODO: not guaranteed to preserve uniqueness
 toIdentifier : String -> String
 toIdentifier string =
-  String.map
-    (\c -> if c == ' ' then '_' else c)
+  Regex.replace
+    Regex.All
+    (Regex.regex "[^A-Za-z0-9_]")
+    (\c -> "_")
     string
