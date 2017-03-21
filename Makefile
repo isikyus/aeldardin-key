@@ -13,7 +13,8 @@ aeldardin-elm.js : ${ELM_SOURCES}
 	node node_modules/.bin/elm-make --yes --warn elm-src/Aeldardin.elm --output aeldardin-elm.js
 
 elm-test : ${ELM_SOURCES} ${ELM_TEST_SOURCES} tests/elm-package.json
-	node node_modules/.bin/elm-test
+	# Apparently elm-make path has to be relative to the _test_ directory, not project root
+	node node_modules/.bin/elm-test --compiler ../node_modules/.bin/elm-make
 
 tests/elm-package.json : elm-package.json tests/elm-package-template.json
 	node update-test-dependencies.js
