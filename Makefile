@@ -9,10 +9,12 @@ ELM_SOURCES=$(shell find elm-src -type f -name '*.elm')
 ELM_TEST_SOURCES=$(shell find tests -type f -name '*.elm')
 
 aeldardin-elm.js : ${ELM_SOURCES}
-	elm-make --warn elm-src/Aeldardin.elm --output aeldardin-elm.js
+	node node_modules/.bin/elm-package install -y
+	node node_modules/.bin/elm-make --yes --warn elm-src/Aeldardin.elm --output aeldardin-elm.js
 
 elm-test : ${ELM_SOURCES} ${ELM_TEST_SOURCES} tests/elm-package.json
-	node node_modules/.bin/elm-test
+	# Apparently elm-make path has to be relative to the _test_ directory, not project root
+	node node_modules/.bin/elm-test --compiler ../node_modules/.bin/elm-make
 
 tests/elm-package.json : elm-package.json tests/elm-package-template.json
 	node update-test-dependencies.js
