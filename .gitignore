@@ -1,0 +1,4 @@
+
+# Ignore /tmp directory (used by Aruba tests)
+tmp/
+aeldardin-elm.js

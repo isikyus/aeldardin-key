@@ -1,0 +1,30 @@
+{
+  "name": "aeldardin-key",
+  "version": "0.0.1",
+  "description": "Tools to work with dungeon keys written in YAML",
+  "main": "aeldardin-elm.js",
+  "dependencies": {
+    "elm": "^0.18.0",
+    "elm-test": "^0.18.2",
+    "js-yaml": "^3.7.0",
+    "requirejs": "^2.3.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isikyus/aeldardin-key.git"
+  },
+  "keywords": [
+    "Command-line",
+    "DND"
+  ],
+  "author": "Isikyus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/isikyus/aeldardin-key/issues"
+  },
+  "homepage": "https://github.com/isikyus/aeldardin-key#readme"
+}

@@ -9,9 +9,9 @@ this one models and processes dungeon _keys_.
 
 ## Usage:
 
-Convert to a .dot (Graphviz) graph:
+Convert to a .gv (Graphviz) graph:
 
-    bin/aeldardin-to-dot dungeon.yml > output.dot
+    bin/aeldardin-to-dot dungeon.yml > output.gv
 
 Convert to a Markdown-formatted dungeon key:
 
