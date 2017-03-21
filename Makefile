@@ -9,7 +9,8 @@ ELM_SOURCES=$(shell find elm-src -type f -name '*.elm')
 ELM_TEST_SOURCES=$(shell find tests -type f -name '*.elm')
 
 aeldardin-elm.js : ${ELM_SOURCES}
-	elm-make --warn elm-src/Aeldardin.elm --output aeldardin-elm.js
+	node node_modules/.bin/elm-package install -y
+	node node_modules/.bin/elm-make --yes --warn elm-src/Aeldardin.elm --output aeldardin-elm.js
 
 elm-test : ${ELM_SOURCES} ${ELM_TEST_SOURCES} tests/elm-package.json
 	node node_modules/.bin/elm-test
