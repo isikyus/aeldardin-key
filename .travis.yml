@@ -1,0 +1,11 @@
+language: node_js
+
+# TODO: consider extracting this to a bootstrap script
+install:
+  - bundle install
+  - npm install
+  # Don't think we need to manually do elm-package install, as tests are packaged by separate code.
+
+script:
+  - make elm-test
+  - make cucumber
