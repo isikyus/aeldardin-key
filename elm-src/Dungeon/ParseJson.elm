@@ -3,34 +3,57 @@ module Dungeon.ParseJson exposing (decodeDungeon)
 -- Code that knows how to parse dungeons from JSON,
 -- including resolving the shorthand syntaxes we allow in the raw YAML key.
 
+import Dict
 import Dungeon exposing (..)
 import Json.Decode exposing (..)
+
+-- An optional field with an array value.
+-- If the field is present, this will decode it as a list;
+-- if missing, it will default to [] in the decoded object.
+optionalListField : String -> Decoder a -> Decoder (List a)
+optionalListField name decoder =
+  dict Json.Decode.value
+    |> Json.Decode.andThen
+        ( \values -> Dict.get name values
+
+            -- If value exists, apply the given decoder.
+            |> Maybe.map (decodeValue (list decoder))
+
+            -- Otherwise, decode to an empty list.
+            |> Maybe.withDefault (Ok [])
+
+            -- If the nested decoding failed, pass up the failure.
+            |> \decoded -> case decoded of
+                                Ok result ->
+                                  succeed result
+                                Err message ->
+                                  fail message
+        )
 
 dungeon : Decoder Dungeon
 dungeon =
   map2 Dungeon
     (field "title" string)
-    (field "zones" (list zone))
+    (optionalListField "zones" zone)
 
 zone : Decoder Zone
 zone =
   map2 Zone
-    (field "rooms" (list room))
-    (oneOf
-      [ field "regions" regions
-      , succeed (Regions [])
-      ]
+    (optionalListField "rooms" room)
+    ( map
+        Regions
+        ( optionalListField
+            "regions"
+            (lazy (\_ -> zone))
+        )
     )
-
-regions : Decoder Regions
-regions = map Regions (list (lazy (\_ -> zone)))
 
 room : Decoder Room
 room =
   map3 Room
     (field "key" string)
     (field "name" string)
-    (field "exits" (list exit))
+    (optionalListField "exits" exit)
 
 
 -- Helper function: decode a one-element list to that one element, and fail on other lists.
