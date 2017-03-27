@@ -48,10 +48,18 @@ zone =
         )
     )
 
+-- Decode strings directly, but convert numbers to strings.
+stringOrInt : Decoder String
+stringOrInt =
+  oneOf
+    [ map toString int
+    , string
+    ]
+
 room : Decoder Room
 room =
   map3 Room
-    (field "key" string)
+    (field "key" stringOrInt)
     (field "name" string)
     (optionalListField "exits" exit)
 
@@ -77,7 +85,7 @@ unwrapSingleton list =
 exit : Decoder Connection
 exit =
   oneOf
-    [ map2 Connection (succeed "door") string
+    [ map2 Connection (succeed "door") stringOrInt
     , let
 
         -- Build a connection from a pair of arguments.

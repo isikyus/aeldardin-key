@@ -53,12 +53,12 @@ all =
                 )
               )
 
-      , fuzz3 string string int "Parses a dungeon with a room" <|
+      , fuzz3 string string int "Parses a dungeon with a numerically-keyed room" <|
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
             "[{ \"rooms\": " ++
-              "[{ \"key\": \"" ++ (toString key) ++ "\"" ++
+              "[{ \"key\": " ++ (toString key) ++
                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
               "}]" ++
             "}]" ++
@@ -69,6 +69,26 @@ all =
                 ( D.Dungeon title
                   [ D.Zone
                       [D.Room (toString key) room []]
+                      (D.Regions [])
+                  ]
+                )
+              )
+      , fuzz3 string string string "Parses a dungeon with a string-keyed room" <|
+        \title -> \room -> \key ->
+          "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
+          ", \"zones\":" ++
+            "[{ \"rooms\": " ++
+              "[{ \"key\": \"" ++ (escapeForJson key) ++ "\"" ++
+               ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
+              "}]" ++
+            "}]" ++
+          "}"
+          |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
+          |> Expect.equal
+              ( Ok
+                ( D.Dungeon title
+                  [ D.Zone
+                      [D.Room key room []]
                       (D.Regions [])
                   ]
                 )
