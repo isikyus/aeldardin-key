@@ -73,6 +73,7 @@ all =
                   ]
                 )
               )
+
       , fuzz3 string string string "Parses a dungeon with a string-keyed room" <|
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
@@ -89,6 +90,51 @@ all =
                 ( D.Dungeon title
                   [ D.Zone
                       [D.Room key room []]
+                      (D.Regions [])
+                  ]
+                )
+              )
+
+      , fuzz5 string string string int string "Parses a dungeon with multiple linked rooms" <|
+        \title -> \key1 -> \room1 -> \key2 -> \room2 ->
+          "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
+          ", \"zones\":" ++
+            "[{ \"rooms\": " ++
+              "[ { \"key\": \"" ++ (escapeForJson key1) ++ "\"" ++
+                ", \"name\": \"" ++ (escapeForJson room1) ++ "\"" ++
+                ", \"exits\":" ++
+                    "[ " ++ (toString key2) ++
+                    ", {\"concealed\":" ++ (toString key2) ++ "}" ++
+                    "]" ++
+                "}" ++
+              ", { \"key\": " ++ (toString key2) ++
+                ", \"name\": \"" ++ (escapeForJson room2) ++ "\"" ++
+                ", \"exits\":" ++
+                    "[ \"" ++ (escapeForJson key1) ++ "\"" ++
+                    ", {\"concealed\":\"" ++ (escapeForJson key1) ++ "\"}" ++
+                    "]" ++
+                "}" ++
+              "]" ++
+            "}]" ++
+          "}"
+          |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
+          |> Expect.equal
+              ( Ok
+                ( D.Dungeon title
+                  [ D.Zone
+                      [ D.Room
+                          key1
+                          room1
+                          [ D.Connection "door" (toString key2)
+                          , D.Connection "concealed" (toString key2)
+                          ]
+                      , D.Room
+                          (toString key2)
+                          room2
+                          [ D.Connection "door" key1
+                          , D.Connection "concealed" key1
+                          ]
+                      ]
                       (D.Regions [])
                   ]
                 )

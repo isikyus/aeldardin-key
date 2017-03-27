@@ -96,7 +96,7 @@ exit =
       in
         map
           connectionFromPair
-          ( keyValuePairs string
+          ( keyValuePairs stringOrInt
             |> andThen unwrapSingleton
           )
     ]
