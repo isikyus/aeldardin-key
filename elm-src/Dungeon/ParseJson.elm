@@ -3,7 +3,6 @@ module Dungeon.ParseJson exposing (decodeDungeon)
 -- Code that knows how to parse dungeons from JSON,
 -- including resolving the shorthand syntaxes we allow in the raw YAML key.
 
-import Dict
 import Dungeon exposing (..)
 import Json.Decode exposing (..)
 
@@ -48,6 +47,7 @@ zone =
         )
     )
 
+
 -- Decode strings directly, but convert numbers to strings.
 stringOrInt : Decoder String
 stringOrInt =
@@ -62,21 +62,6 @@ room =
     (field "key" stringOrInt)
     (field "name" string)
     (optionalListField "exits" exit)
-
-
--- Helper function: decode a one-element list to that one element, and fail on other lists.
-unwrapSingleton : List a -> Decoder a
-unwrapSingleton list =
-  case list of
-    [] ->
-
-      fail "Expected a one-field object for door type, got an empty one"
-
-    [ element ] ->
-      succeed element
-
-    first :: second :: rest ->
-      fail "Expected a one-field object for door type, got two or more fields"
 
 
 -- Exits can be a bare <key>, or a hash like { to: <key>, type: <type>, etc.}, where <type>
