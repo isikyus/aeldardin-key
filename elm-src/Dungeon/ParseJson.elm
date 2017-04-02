@@ -79,26 +79,17 @@ unwrapSingleton list =
       fail "Expected a one-field object for door type, got two or more fields"
 
 
--- Exits can be a bare <key>, or a pair like <type>: <key>, where <type>
+-- Exits can be a bare <key>, or a hash like { to: <key>, type: <type>, etc.}, where <type>
 -- is an arbitrary string describing how the exit works (door, secret, "magical portal", etc.)
 -- In the former case, the type is assumed to be "door".
 exit : Decoder Connection
 exit =
   oneOf
     [ map2 Connection (succeed "door") stringOrInt
-    , let
-
-        -- Build a connection from a pair of arguments.
-        -- TODO: surely there's a cleaner way to do this?
-        connectionFromPair : ( String, String ) -> Connection
-        connectionFromPair (doorType, dest) =
-                Connection doorType dest
-      in
-        map
-          connectionFromPair
-          ( keyValuePairs stringOrInt
-            |> andThen unwrapSingleton
-          )
+    , map2
+        Connection
+        (field "type" string)
+        (field "to" stringOrInt)
     ]
 
 -- TODO: should validate room IDs are unique.
