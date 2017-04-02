@@ -1,6 +1,6 @@
 {
   "name": "aeldardin-key",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Tools to work with dungeon keys written in YAML",
   "main": "aeldardin-elm.js",
   "dependencies": {
