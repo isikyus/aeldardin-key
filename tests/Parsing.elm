@@ -134,9 +134,7 @@ all =
                 ", \"name\": \"" ++ (escapeForJson room1) ++ "\"" ++
                 ", \"exits\":" ++
                     "[ " ++ (toString key2) ++
-                    ", {\"to\":" ++ (toString key2) ++
-                      ", \"type\":\"concealed\"" ++
-                      "}" ++
+                    ", {\"to\":" ++ (toString key2) ++ "}" ++
                     "]" ++
                 "}" ++
               ", { \"key\": " ++ (toString key2) ++
@@ -160,7 +158,7 @@ all =
                           key1
                           room1
                           [ D.Connection "door" (toString key2)
-                          , D.Connection "concealed" (toString key2)
+                          , D.Connection "door" (toString key2)
                           ]
                       , D.Room
                           (toString key2)

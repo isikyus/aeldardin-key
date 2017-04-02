@@ -88,7 +88,12 @@ exit =
     [ map2 Connection (succeed "door") stringOrInt
     , map2
         Connection
-        (field "type" string)
+        ( map
+          ( Maybe.withDefault "door" )
+          ( maybe
+            (field "type" string)
+          )
+        )
         (field "to" stringOrInt)
     ]
 
