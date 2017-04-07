@@ -3,6 +3,7 @@ module Dungeon.ParseJson exposing (decodeDungeon)
 -- Code that knows how to parse dungeons from JSON,
 -- including resolving the shorthand syntaxes we allow in the raw YAML key.
 
+import Dict
 import Dungeon exposing (..)
 import Json.Decode exposing (..)
 
