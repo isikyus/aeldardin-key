@@ -17,7 +17,7 @@ elm-stuff/packages :
 # Per the Elm FAQ (http://faq.elm-community.org/#how-do-i-install-an-elm-package-that-has-not-been-published-to-packageselm-langorg-for-use-in-my-project),
 # non-published packages with native modules need variables renamed.
 elm-server-side-renderer/modify-natives :
-	sed -i\~ -e 's/_eeue56\\$elm_server_side_renderer\\$\/_user\\$project\\$\/' elm-server-side-renderer/src/Native/ServerSideHelpers.js
+	sed -i\\~ -e 's/_eeue56\$$elm_server_side_renderer\$$/_user\$$project\$$/' elm-server-side-renderer/src/Native/ServerSideHelpers.js
 
 # Apparently elm-make path has to be relative to the _test_ directory, not project root
 elm-test : ${ELM_SOURCES} ${ELM_TEST_SOURCES} tests/elm-package.json
