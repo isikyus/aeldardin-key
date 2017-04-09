@@ -71,6 +71,12 @@ function (yaml, fs, elmWrapper) {
       });
       break;
 
+    case 'html':
+      loadKeyFromFile(filename, function(data) {
+        elmWrapper('toHtml', data, console.log);
+      });
+      break;
+
     default:
       console.error('Unrecognised subcommand ' + subcommand);
       showUsage();

@@ -15,6 +15,7 @@ import Platform.Sub as Sub
 -- Load Aeldardin libraries.
 import Dungeon.ParseJson
 import Export.Graphviz
+import Export.Html
 
 main : Program Never Model Msg
 main =
@@ -37,6 +38,7 @@ type Model = EmptyModel
 type Msg
   = Done
   | ToGraphviz (String)
+  | ToHtml (String)
 
 port done : String -> Cmd msg
 
@@ -52,13 +54,26 @@ update msg model =
         Err message ->
           ( model, done message )
 
+    ToHtml jsonString ->
+      case Dungeon.ParseJson.decodeDungeon jsonString of
+        Ok dungeon ->
+          ( model, done ( Export.Html.toHtmlText dungeon ) )
+
+        -- TODO: return errors using their own port.
+        Err message ->
+          ( model, done message )
+
     Done ->
       ( model, Cmd.none )
 
 -- SUBSCRIPTIONS
 
 port toGraphviz : (String -> msg) -> Sub msg
+port toHtml : (String -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  toGraphviz ToGraphviz
+  Sub.batch
+    [ toGraphviz ToGraphviz
+    , toHtml ToHtml
+    ]
