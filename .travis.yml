@@ -2,6 +2,7 @@ language: node_js
 
 # TODO: consider extracting this to a bootstrap script
 install:
+  - rvm install $(cat .ruby-version)
   - bundle install
   - npm install
   # Don't think we need to manually do elm-package install, as tests are packaged by separate code.
