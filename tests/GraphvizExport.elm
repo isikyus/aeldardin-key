@@ -30,6 +30,8 @@ dungeonWithRoomsNamed names =
   D.Dungeon
     "Test Dungeon with rooms for names"
     [ D.Zone
+      "1"
+      Nothing
       ( List.map
         -- Create exits to every other room, including this one
         -- (since we don't skip this room's name)

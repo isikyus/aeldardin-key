@@ -9,7 +9,9 @@ type alias Dungeon =
   }
 
 type alias Zone =
-  { rooms : List Room
+  { id : String
+  , title: Maybe String
+  , rooms : List Room
   , regions : Regions
   }
 

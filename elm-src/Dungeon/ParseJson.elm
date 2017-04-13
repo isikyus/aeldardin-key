@@ -38,8 +38,10 @@ dungeon =
 
 zone : Decoder Zone
 zone =
-  map2 Zone
-    (optionalListField "rooms" room)
+  map4 Zone
+    ( field "key" stringOrInt )
+    ( maybe ( field "title" string ) )
+    ( optionalListField "rooms" room )
     ( map
         Regions
         ( optionalListField

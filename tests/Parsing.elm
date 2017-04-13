@@ -36,17 +36,21 @@ all =
           |> Result.mapError (\error -> ())
           |> Expect.equal (Err ())
 
-      , fuzz3 string string int "Parses a dungeon with only empty zones" <|
-        \title -> \room -> \key ->
+      , fuzz3 string string int "Parses a dungeon with a named zone" <|
+        \title -> \zone -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{}]" ++
+            "[{  \"key\":" ++ (toString key) ++
+              ", \"title\":\"" ++ (escapeForJson zone) ++ "\"" ++
+            "}]" ++
           "}"
           |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
           |> Expect.equal
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      (toString key)
+                      (Just zone)
                       []
                       (D.Regions [])
                   ]
@@ -57,10 +61,11 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
-              "[{ \"key\": " ++ (toString key) ++
-               ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
-              "}]" ++
+            "[{  \"key\":1" ++
+              ", \"rooms\": " ++
+                "[{ \"key\": " ++ (toString key) ++
+                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
+                "}]" ++
             "}]" ++
           "}"
           |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
@@ -68,6 +73,8 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [D.Room (toString key) room []]
                       (D.Regions [])
                   ]
@@ -78,7 +85,8 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
+            "[{  \"key\":1" ++
+              ", \"rooms\": " ++
               "[{ \"key\": \"" ++ (escapeForJson key) ++ "\"" ++
                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
               "}]" ++
@@ -89,6 +97,8 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [D.Room key room []]
                       (D.Regions [])
                   ]
@@ -99,7 +109,8 @@ all =
         \title -> \room -> \key -> \details ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
+            "[{  \"key\":1" ++
+              ", \"rooms\": " ++
               "[{ \"key\": \"" ++ (escapeForJson key) ++ "\"" ++
                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
                 ", \"exits\":" ++
@@ -115,6 +126,8 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [ D.Room
                           key
                           room
@@ -129,7 +142,8 @@ all =
         \title -> \key1 -> \room1 -> \key2 -> \room2 ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
+            "[{  \"key\":1" ++
+              ", \"rooms\": " ++
               "[ { \"key\": \"" ++ (escapeForJson key1) ++ "\"" ++
                 ", \"name\": \"" ++ (escapeForJson room1) ++ "\"" ++
                 ", \"exits\":" ++
@@ -154,6 +168,8 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [ D.Room
                           key1
                           room1
@@ -176,11 +192,13 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"regions\": " ++
-              "[{ \"rooms\": " ++
-                "[{ \"key\": \"" ++ (toString key) ++ "\"" ++
-                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
-                "}]" ++
+            "[{  \"key\":1" ++
+              ", \"regions\": " ++
+              "[{  \"key\":2" ++
+                ", \"rooms\": " ++
+                  "[{ \"key\": \"" ++ (toString key) ++ "\"" ++
+                  ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
+                  "}]" ++
               "}]" ++
             "}]" ++
           "}"
@@ -189,9 +207,13 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       []
                       ( D.Regions
                         [ D.Zone
+                          "2"
+                          Nothing
                           [ D.Room (toString key) room []
                           ]
                           (D.Regions [])
