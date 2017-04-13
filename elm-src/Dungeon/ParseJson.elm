@@ -40,7 +40,7 @@ zone : Decoder Zone
 zone =
   map4 Zone
     ( field "id" stringOrInt )
-    ( maybe ( field "title" string ) )
+    ( maybe ( field "name" string ) )
     ( optionalListField "rooms" room )
     ( map
         Regions

@@ -41,7 +41,7 @@ all =
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
             "[{  \"id\":" ++ (toString key) ++
-              ", \"title\":\"" ++ (escapeForJson zone) ++ "\"" ++
+              ", \"name\":\"" ++ (escapeForJson zone) ++ "\"" ++
             "}]" ++
           "}"
           |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
