@@ -40,7 +40,7 @@ all =
         \title -> \zone -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{  \"key\":" ++ (toString key) ++
+            "[{  \"id\":" ++ (toString key) ++
               ", \"title\":\"" ++ (escapeForJson zone) ++ "\"" ++
             "}]" ++
           "}"
@@ -61,7 +61,7 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{  \"key\":1" ++
+            "[{  \"id\":1" ++
               ", \"rooms\": " ++
                 "[{ \"key\": " ++ (toString key) ++
                 ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
@@ -85,7 +85,7 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{  \"key\":1" ++
+            "[{  \"id\":1" ++
               ", \"rooms\": " ++
               "[{ \"key\": \"" ++ (escapeForJson key) ++ "\"" ++
                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
@@ -109,7 +109,7 @@ all =
         \title -> \room -> \key -> \details ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{  \"key\":1" ++
+            "[{  \"id\":1" ++
               ", \"rooms\": " ++
               "[{ \"key\": \"" ++ (escapeForJson key) ++ "\"" ++
                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
@@ -142,7 +142,7 @@ all =
         \title -> \key1 -> \room1 -> \key2 -> \room2 ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{  \"key\":1" ++
+            "[{  \"id\":1" ++
               ", \"rooms\": " ++
               "[ { \"key\": \"" ++ (escapeForJson key1) ++ "\"" ++
                 ", \"name\": \"" ++ (escapeForJson room1) ++ "\"" ++
@@ -192,9 +192,9 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{  \"key\":1" ++
+            "[{  \"id\":1" ++
               ", \"regions\": " ++
-              "[{  \"key\":2" ++
+              "[{  \"id\":2" ++
                 ", \"rooms\": " ++
                   "[{ \"key\": \"" ++ (toString key) ++ "\"" ++
                   ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++

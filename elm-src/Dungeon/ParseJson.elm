@@ -39,7 +39,7 @@ dungeon =
 zone : Decoder Zone
 zone =
   map4 Zone
-    ( field "key" stringOrInt )
+    ( field "id" stringOrInt )
     ( maybe ( field "title" string ) )
     ( optionalListField "rooms" room )
     ( map
