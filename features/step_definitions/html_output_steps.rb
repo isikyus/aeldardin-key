@@ -7,6 +7,10 @@ RSpec::Matchers.define(:output_html_matching) do |matcher|
 
     values_match? matcher, html
   end
+
+  failure_message do |command|
+    "Expected \"#{command.commandline}\" to output HTML matching #{description_of(matcher)} but got \"#{command.output}\""
+  end
 end
 
 Then /the output should have the title "(.*)"/ do |title|
