@@ -21,5 +21,9 @@ Then /the output should have the title "(.*)"/ do |title|
 end
 
 Then /the output should have a section headed "(.*)"/ do |heading|
-  expect(last_command_started).to output_html_matching have_selector('section h2', :text => heading)
+  all_headings = %w[ h1 h2 h3 h4 h5 h6 ]
+  all_section_headings = all_headings.map { |heading| "section #{heading}" }
+  section_any_heading  = all_section_headings.join(', ')
+
+  expect(last_command_started).to output_html_matching have_selector(section_any_heading, :text => heading)
 end
