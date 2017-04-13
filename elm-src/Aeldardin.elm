@@ -55,13 +55,18 @@ update msg model =
           ( model, done message )
 
     ToHtml jsonString ->
-      case Dungeon.ParseJson.decodeDungeon jsonString of
-        Ok dungeon ->
-          ( model, done ( Export.Html.toHtmlText dungeon ) )
+      let
+          htmlOrError =
+            Dungeon.ParseJson.decodeDungeon jsonString
+              |> Result.andThen Export.Html.toHtmlText
+      in
+        case htmlOrError of
+          Ok html ->
+            ( model, done html )
 
-        -- TODO: return errors using their own port.
-        Err message ->
-          ( model, done message )
+          -- TODO: return errors using their own port.
+          Err message ->
+            ( model, done message )
 
     Done ->
       ( model, Cmd.none )
