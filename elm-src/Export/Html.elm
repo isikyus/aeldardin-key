@@ -60,17 +60,43 @@ htmlForZones depth zones =
 
 zoneToHtml : Int -> Zone -> Result String (Html.Html msg)
 zoneToHtml nesting zone =
-  Result.map
-    ( \heading ->
+  Result.map2
+    ( \heading -> \roomHtml ->
         ( Html.section
             [ Html.Attributes.id ("zone-" ++ zone.key) ]
             ( [ heading
                   []
                   [ Html.text
-                      ( Maybe.withDefault
-                        ("Zone " ++ toString zone.key)
-                        zone.name
-                      )
+                    ( Maybe.withDefault
+                      ("Zone " ++ toString zone.key)
+                      zone.name
+                    )
+                  ]
+              ]
+              ++ roomHtml
+            )
+        )
+    )
+    ( headingForDepth nesting )
+    ( htmlForRooms (nesting + 1) zone.rooms )
+
+htmlForRooms : Int -> List Room -> Result String (List (Html.Html msg))
+htmlForRooms depth rooms =
+    ( allOrErrors
+      ( List.map (roomToHtml depth) rooms )
+    )
+    |> Result.mapError (List.foldl String.append "")
+
+roomToHtml : Int -> Room -> Result String (Html.Html msg)
+roomToHtml nesting room =
+  Result.map
+    ( \heading ->
+        ( Html.section
+            [ Html.Attributes.id ("room-" ++ room.key) ]
+            ( [ heading
+                  []
+                  [ Html.text
+                      room.name
                   ]
               ]
             )

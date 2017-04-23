@@ -5,6 +5,7 @@ import Expect
 import Fuzz exposing (list, int, tuple, string)
 import String
 
+import HtmlExport
 import GraphvizExport
 import GraphvizParser
 import Parsing
@@ -12,7 +13,8 @@ import Parsing
 all : Test
 all =
   describe "aeldardin"
-    [ GraphvizExport.all
+    [ HtmlExport.all
+    , GraphvizExport.all
     , GraphvizParser.tests
     , Parsing.all
     ]
