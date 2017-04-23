@@ -6,6 +6,7 @@
  */
 
 var fs = require('fs');
+var path = require('path');
 
 // Generic function to load a JSON file (does this already exist?)
 var loadUTF8Json = function(filename) {
@@ -26,6 +27,20 @@ var testPackage = loadUTF8Json('tests/elm-package-template.json');
 for (dependency in mainPackage.dependencies) {
   testPackage.dependencies[dependency] = mainDeps[dependency];
 };
+
+// Update source directories too (for unpublished packages included as submodules)
+for (index in mainPackage["source-directories"]) {
+
+  // Prefix relative paths with ../ so they work in the tests/ folder.
+  var directory = mainPackage["source-directories"][index],
+      prefixedDirectory;
+  if (path.isAbsolute(directory)) {
+    prefixedDirectory = directory;
+  } else {
+    prefixedDirectory = path.join('..', directory);
+  }
+  testPackage["source-directories"].push(prefixedDirectory);
+}
 
 // Stringify with four-space indentation, to preserve the existing format
 // as much as possible.
