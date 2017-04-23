@@ -48,10 +48,34 @@ all =
             ]
           |> Export.Html.toHtmlText
           |> expectOkAnd
-               ( Expect.all
-                   [ expectSubstring (dungeon ++ "</h1>")
-                   , expectSubstring (zone ++ "</h2>")
-                   , expectSubstring (room ++ "</h3>")
-                  ]
-               )
+              ( Expect.all
+
+                  -- Assume tags are opened correctly by Elm's HTML generation
+                  [ expectSubstring (dungeon ++ "</h1>")
+                  , expectSubstring (zone ++ "</h2>")
+                  , expectSubstring (room ++ "</h3>")
+                 ]
+              )
+    , fuzz string "Includes zones recursively" <|
+        \childZone ->
+          D.Dungeon
+            "<dungeon name>"
+            [ D.Zone
+                "z1"
+                Nothing
+                []
+                ( D.Regions
+                    [ D.Zone
+                        "z2"
+                        (Just childZone)
+                        []
+                        (D.Regions [])
+                    ]
+                )
+            ]
+          |> Export.Html.toHtmlText
+          |> expectOkAnd
+              ( expectSubstring
+                  (childZone ++ "</h3>")
+              )
     ]

@@ -1,4 +1,4 @@
-module Dungeon exposing (Dungeon, Room, Zone, Regions(..), Connection, rooms, localRooms, findRoom)
+module Dungeon exposing (Dungeon, Room, Zone, Regions(..), Connection, rooms, localRooms, findRoom, regionZones)
 
 -- Types representing an Aeldardin dungeon.
 -- These may eventually need to be parametric or something to allow addons with their own types.

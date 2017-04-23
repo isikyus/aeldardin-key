@@ -60,8 +60,8 @@ htmlForZones depth zones =
 
 zoneToHtml : Int -> Zone -> Result String (Html.Html msg)
 zoneToHtml nesting zone =
-  Result.map2
-    ( \heading -> \roomHtml ->
+  Result.map3
+    ( \heading -> \roomHtml -> \zoneHtml ->
         ( Html.section
             [ Html.Attributes.id ("zone-" ++ zone.key) ]
             ( [ heading
@@ -73,12 +73,16 @@ zoneToHtml nesting zone =
                     )
                   ]
               ]
-              ++ roomHtml
+              ++ roomHtml ++ zoneHtml
             )
         )
     )
     ( headingForDepth nesting )
     ( htmlForRooms (nesting + 1) zone.rooms )
+    ( htmlForZones
+        (nesting + 1)
+        (Dungeon.regionZones zone.regions)
+    )
 
 htmlForRooms : Int -> List Room -> Result String (List (Html.Html msg))
 htmlForRooms depth rooms =
