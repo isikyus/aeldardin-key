@@ -85,13 +85,7 @@ float =
 --           (function unusedFields)
 --     )
 --     decoder
--- 
--- -- Add a prefix to all unused fields in a DecodeState
--- prefixUnusedFields : String -> DecodeState a -> DecodeState a
--- prefixUnusedFields prefix (Decoding value unusedFields)=
---   Decoding
---     value
---     (Set.map (String.append prefix) unusedFields)
+--
 
 -- Decode an object to its keys (represented as an UnusedFields object)
 fieldNames : Decode.Decoder UnusedFields
@@ -107,6 +101,14 @@ fieldNames =
     )
     (Decode.keyValuePairs Decode.value)
 
+-- Nested-object-decoding helper
+-- Pushes a string onto all unused-field lists in an UnusedFields object.
+prefixUnusedFields : String -> UnusedFields -> UnusedFields
+prefixUnusedFields prefix fields =
+  Set.map
+    ( \unprefixed -> prefix :: unprefixed )
+    fields
+
 -- Decode a field, and mark all other fields of the current object as unused.
 field : String -> Decoder a -> Decoder a
 field name decoder =
@@ -115,7 +117,9 @@ field name decoder =
         -- TODO: need to carry over any warnings from the inner decoder.
         ( Decoding
           value
-          (Set.remove [name] fields)
+          ( (Set.remove [name] fields)
+            |> ( Set.union (prefixUnusedFields name warnings) )
+          )
         )
     )
     ( Decode.field name decoder )

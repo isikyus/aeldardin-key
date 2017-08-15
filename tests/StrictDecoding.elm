@@ -53,13 +53,49 @@ all =
           |> Expect.equal (Ok value)
 
       , fuzz3 string string string "Fails to parse an unexpected field" <|
-        \field -> \value -> \extraField ->
-          "{\"" ++ (escapeForJson field) ++ "\":\"" ++ (escapeForJson value) ++
-            "\",\"" ++ (escapeForJson extraField) ++ "\":\"Extra Value\"}"
-          |> Decode.decodeString (Decode.field field Decode.string)
-          |> ( Expect.equal
-                ( Err
-                  ( Decode.Unused (Set.singleton [extraField]) )
-                )
+        \field -> \value -> \suffix ->
+          let
+              -- Ensure the unused field name is different to the actual field of interest.
+              -- Need the _ in case field and suffix are empty strings.
+              unusedFieldName = field ++ "_" ++ suffix
+          in
+            "{\"" ++ (escapeForJson field) ++ "\":\"" ++ (escapeForJson value) ++
+              "\",\"" ++ (escapeForJson unusedFieldName) ++ "\":\"Extra Value\"}"
+            |> Decode.decodeString (Decode.field field Decode.string)
+            |> ( Expect.equal
+                  ( Err
+                    ( Decode.Unused (Set.singleton [unusedFieldName]) )
+                  )
+              )
+
+      , fuzz2 string string "Parses a nested field" <|
+        \key -> \subkey ->
+          "{\"" ++ (escapeForJson key) ++ "\":" ++
+            "{\"" ++ (escapeForJson subkey) ++ "\":22}" ++
+          "}"
+          |> ( Decode.decodeString
+                ( Decode.field key (Decode.field subkey Decode.int) )
              )
+          |> ( Expect.equal (Ok 22) )
+
+      , fuzz3 string string string "Fails on an unused nested field" <|
+        \key -> \subkey -> \suffix ->
+          let
+              -- Ensure the unused field name is different to the actual field of interest.
+              -- Need the _ in case subkey and suffix are empty strings.
+              unusedFieldName = subkey ++ "_" ++ suffix
+          in
+            "{\"" ++ (escapeForJson key) ++ "\":" ++
+              "{\"" ++ (escapeForJson subkey) ++ "\":22" ++
+              ",\"" ++ (escapeForJson unusedFieldName) ++ "\":0" ++
+              "}" ++
+            "}"
+            |> ( Decode.decodeString
+                  ( Decode.field key (Decode.field subkey Decode.int) )
+              )
+            |> ( Expect.equal
+                  ( Err
+                    ( Decode.Unused (Set.singleton [key, unusedFieldName]) )
+                  )
+              )
       ]
