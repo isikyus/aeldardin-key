@@ -98,4 +98,19 @@ all =
                     ( Decode.Unused (Set.singleton [key, unusedFieldName]) )
                   )
               )
+
+      , fuzz string "Succeeds when multiple fields are all used" <|
+        \field ->
+            "{\"" ++ (escapeForJson field) ++ "_1\": \"a\"" ++
+            ",\"" ++ (escapeForJson field) ++ "_2\": \"b\"" ++
+            "}"
+            |> ( Decode.decodeString
+                  -- Return the two parsed fields as a pair.
+                  ( Decode.map2
+                    (,)
+                    ( Decode.field (field ++ "_1") Decode.string )
+                    ( Decode.field (field ++ "_2") Decode.string )
+                  )
+              )
+            |> Expect.equal ( Ok ("a","b") )
       ]

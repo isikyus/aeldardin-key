@@ -1,5 +1,4 @@
-module Parser.DecodeStrictly exposing (Decoder, Failure(..), decodeString, string, bool, int, float, field)
--- map, map2, map3, field)
+module Parser.DecodeStrictly exposing (Decoder, Failure(..), decodeString, string, bool, int, float, field, map, map2, map3)
 
 -- Wraps the standard Json.Decode, adding the ability to fail
 -- if the decoded JSON contains any unrecognised elements.
@@ -125,42 +124,44 @@ field name decoder =
     ( Decode.field name decoder )
     fieldNames
 
---   Decode.andThen
---     ( \(Decoding dict warnings) ->
---         ( Maybe.withDefault
---             -- TODO: improve error messages
---             ( Decode.fail ("Field " ++ name ++ " not found.") )
---             ( Decode.succeed
---                 ( Decoding
---                     (Dict.get name)
--- 
---                     ( Set.union
---                         -- Remove the field we've just used from the unused-fields list.
---                         ( Dict.keys dict
---                           |> Set.fromList
---                           |> Set.filter (\a -> a /= name)
---                         )
---                         -- Keep all warnings from the inner decoder
---                         ( Set.map (String.append name) warnings )
---                     )
---                 )
---             )
---         )
---     )
---     (Decode.dict Decode.value)
+-- Re-implementations of Json.Decode.map* functions
 
--- Analoguous to Json.Decode.map
--- Preserves unused fields as-is.
--- map : (a -> value) -> Decoder a -> Decoder value
--- map function decoder =
---   let
---       wrappedFunction : DecodeState a -> DecodeState value
---       wrappedFunction (Decoding data warnings) =
---         Decoding (function data) warnings
---   in
---     Decode.map
---       wrappedFunction
---       decoder
+map : (a -> value) -> Decoder a -> Decoder value
+map builder decoder =
+  Decode.map
+    ( \(Decoding aValue unused) -> Decoding (builder aValue) unused )
+    decoder
+
+map2 : (a -> b -> value) -> Decoder a -> Decoder b -> Decoder value
+map2 builder decoder1 decoder2 =
+  Decode.map2
+    ( \(Decoding value1 unused1) -> \(Decoding value2 unused2) ->
+      ( Decoding
+        (builder value1 value2)
+
+        -- Fields are unused if we didn't use them for either component.
+        (Set.intersect unused1 unused2)
+      )
+    )
+    decoder1
+    decoder2
+
+map3 : (a -> b -> c -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder value
+map3 builder decoder1 decoder2 decoder3 =
+  Decode.map3
+    ( \(Decoding value1 unused1) ->
+      \(Decoding value2 unused2) ->
+      \(Decoding value3 unused3) ->
+      ( Decoding
+        (builder value1 value2 value3)
+
+        -- Fields are unused if we didn't use them for either component.
+        (Set.intersect unused1 (Set.intersect unused2 unused3) )
+      )
+    )
+    decoder1
+    decoder2
+    decoder3
 
 -- Analogous to Json.Decode.andThen
 -- Keeps only unused field values not used by _either_ decoder.
@@ -173,8 +174,4 @@ field name decoder =
 --       )
 --     )
 --     decoder
-
--- Re-implementations of Json.Decode.mapN functions
--- map2 : (a -> b -> value) -> Decoder a -> Decoder b -> Decoder value
--- map2 builder aDecoder bDecoder =
   
