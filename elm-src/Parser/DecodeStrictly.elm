@@ -1,4 +1,4 @@
-module Parser.DecodeStrictly exposing (Decoder, Failure(..), decodeString, string, bool, int, float, field, optionalField, map, map2, map3, map4, oneOf, succeed, fail)
+module Parser.DecodeStrictly exposing (Decoder, Failure(..), decodeString, string, bool, int, float, field, optionalField, list, map, map2, map3, map4, oneOf, succeed, fail)
 
 -- Wraps the standard Json.Decode, adding the ability to fail
 -- if the decoded JSON contains any unrecognised elements.
@@ -100,6 +100,29 @@ float : Decoder Float
 float =
   addUnusedFields Decode.float noUnusedFields
 
+-- Data structure decoders
+
+list : Decoder a -> Decoder (List a)
+list decoder =
+  Decode.map
+    ( \list ->
+      ( Decoding
+          ( List.map
+              (\(Decoding value _) -> value)
+              list
+          )
+          ( List.foldr
+              Set.union
+              Set.empty
+              ( List.map
+                  (\(Decoding _ warnings) -> warnings)
+                  list
+              )
+          )
+      )
+    )
+    ( Decode.list decoder )
+
 --Primitive object decoders
 
 -- Decode a field, and mark all other fields of the current object as unused.
@@ -135,10 +158,6 @@ optionalField name decoder =
         Decode.succeed (Decoding Nothing fields)
     )
     fieldNames
-
--- Copy data structure decoders
-
--- TODO
 
 -- Re-implementations of Json.Decode.map* functions
 
@@ -225,7 +244,12 @@ succeed : a -> Decoder a
 succeed value =
   addUnusedFields
     ( Decode.succeed value )
-    fieldNames
+
+    -- Look for unused fields only if we're actually decoding an object.
+    ( Decode.map
+        ( Maybe.withDefault Set.empty )
+        ( Decode.maybe fieldNames )
+    )
 
 fail : String -> Decoder a
 fail error =

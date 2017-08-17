@@ -100,6 +100,42 @@ all =
                   )
                )
 
+      , fuzz3 string string string "Parses a valid list successfully" <|
+        \key -> \item1 -> \item2 ->
+            "{\"" ++ (escapeForJson key) ++ "\":" ++
+              "[\"" ++ (escapeForJson item1) ++ "\"" ++
+              ",\"" ++ (escapeForJson item2) ++ "\"" ++
+              "]" ++
+            "}"
+            |> ( Decode.decodeString
+                  ( Decode.field key (Decode.list Decode.string) )
+              )
+            |> Expect.equal ( Ok [item1, item2] )
+
+      , fuzz3 string string string "Combines unused fields from an invalid list" <|
+        \key -> \unused1 -> \unused2 ->
+            "{\"" ++ (escapeForJson key) ++ "\":" ++
+              "[ {\"" ++ (escapeForJson unused1) ++ "\": 1}" ++
+              ", {\"" ++ (escapeForJson unused2) ++ "\": 2}" ++
+              "]" ++
+            "}"
+            |> ( Decode.decodeString
+                  ( Decode.field
+                    key
+                    ( Decode.list (Decode.succeed 0) )
+                  )
+               )
+            |> ( Expect.equal
+                  ( Err
+                    ( Decode.Unused
+                      ( Set.empty
+                        |> Set.insert [key, unused1]
+                        |> Set.insert [key, unused2]
+                      )
+                    )
+                  )
+               )
+
       , fuzz string "Succeeds when multiple fields are all used" <|
         \field ->
             "{\"" ++ (escapeForJson field) ++ "_1\": \"a\"" ++
@@ -134,6 +170,7 @@ all =
               )
             |> Expect.equal ( Ok ("a","b","c","d") )
 
+        -- Not a priority to support dict because we can't tell which fields are used.
 --       , fuzz string "Assumes all fields are used when decoding to dict" <|
 --         \field ->
 --             "{\"" ++ (escapeForJson field) ++ "_1\": \"a\"" ++
@@ -210,6 +247,13 @@ all =
                   ( Decode.Unused (Set.singleton [field]) )
                 )
               )
+
+      , fuzz2 string int "succeed reports no unused fields on non-objects" <|
+        \field -> \value -> "{\"" ++ (escapeForJson field) ++ "\":" ++ (toString value) ++ "}"
+          |> ( Decode.decodeString
+               ( Decode.field field (Decode.succeed 0) )
+              )
+          |> Expect.equal (Ok 0)
 
       , fuzz string "fail passes out an error message (unused fields are irrelevant)" <|
         \error ->
