@@ -6,6 +6,7 @@ import Fuzz exposing (string, bool, int, float)
 
 import Regex as R
 import Set
+import Dict
 
 import Parser.DecodeStrictly as Decode
 
@@ -97,7 +98,7 @@ all =
                   ( Err
                     ( Decode.Unused (Set.singleton [key, unusedFieldName]) )
                   )
-              )
+               )
 
       , fuzz string "Succeeds when multiple fields are all used" <|
         \field ->
@@ -113,4 +114,119 @@ all =
                   )
               )
             |> Expect.equal ( Ok ("a","b") )
+
+      , fuzz string "Succeeds when four fields are all used" <|
+        \field ->
+            "{\"" ++ (escapeForJson field) ++ "_1\": \"a\"" ++
+            ",\"" ++ (escapeForJson field) ++ "_2\": \"b\"" ++
+            ",\"" ++ (escapeForJson field) ++ "_3\": \"c\"" ++
+            ",\"" ++ (escapeForJson field) ++ "_4\": \"d\"" ++
+            "}"
+            |> ( Decode.decodeString
+                  -- Return the four parsed fields as a 4-tuple.
+                  ( Decode.map4
+                    (,,,)
+                    ( Decode.field (field ++ "_1") Decode.string )
+                    ( Decode.field (field ++ "_2") Decode.string )
+                    ( Decode.field (field ++ "_3") Decode.string )
+                    ( Decode.field (field ++ "_4") Decode.string )
+                  )
+              )
+            |> Expect.equal ( Ok ("a","b","c","d") )
+
+--       , fuzz string "Assumes all fields are used when decoding to dict" <|
+--         \field ->
+--             "{\"" ++ (escapeForJson field) ++ "_1\": \"a\"" ++
+--             ",\"" ++ (escapeForJson field) ++ "_2\": \"b\"" ++
+--             "}"
+--             |> Decode.decodeString (Decode.dict Decode.string)
+--             |> ( Expect.equal
+--                  ( Dict.empty
+--                    |> Dict.insert (field ++ "_1") "a"
+--                    |> Dict.insert (field ++ "_2") "b"
+--                  )
+--                )
+
+      , fuzz2 string int "optionalField returns and consumes a field if present" <|
+        \field -> \value -> "{\"" ++ (escapeForJson field) ++ "\":" ++ (toString value) ++ "}"
+          |> Decode.decodeString (Decode.optionalField field Decode.int)
+          |> Expect.equal (Ok (Just value))
+
+      , fuzz string "optionalField returns nothing if the field is not present" <|
+          \field -> "{}"
+            |> Decode.decodeString (Decode.optionalField field Decode.int)
+            |> Expect.equal (Ok Nothing)
+
+      , fuzz string "optionalField fails on unused fields as normal" <|
+        \field ->
+          let
+              wrongFieldName = "_" ++ field
+          in
+            "{\"" ++ (escapeForJson wrongFieldName) ++ "\":0}"
+              |> Decode.decodeString (Decode.optionalField field Decode.int)
+              |>  ( Expect.equal
+                    ( Err
+                      ( Decode.Unused (Set.singleton [wrongFieldName]) )
+                    )
+                  )
+
+      , fuzz string "optionalField does not swallow inner failures" <|
+        \field ->
+          "{\"" ++ (escapeForJson field) ++ "\":0}"
+            |> ( Decode.decodeString
+                  ( Decode.optionalField field (Decode.fail "fake error") )
+                )
+            |>  ( Expect.equal
+                  ( Err
+                    ( Decode.InvalidJson
+                      ("I ran into a `fail` decoder at _." ++ field ++ ": fake error")
+                    )
+                  )
+                )
+
+      , fuzz2 string int "oneOf consumes the first field if it is used" <|
+        \field -> \value -> "{\"" ++ (escapeForJson field) ++ "\":" ++ (toString value) ++ "}"
+          |> ( Decode.decodeString
+               ( Decode.oneOf
+                   [ (Decode.field field Decode.int)
+                   , (Decode.succeed 0)
+                   ]
+                )
+              )
+          |> Expect.equal (Ok value)
+
+      , fuzz string "oneOf does not consume a field if that path fails" <|
+        \field ->
+          "{\"" ++ (escapeForJson field) ++ "\":\"nonNumericValue\"}"
+          |> ( Decode.decodeString
+               ( Decode.oneOf
+                   [ (Decode.field field Decode.int)
+                   , (Decode.succeed 0)
+                   ]
+                )
+              )
+          |>  ( Expect.equal
+                ( Err
+                  ( Decode.Unused (Set.singleton [field]) )
+                )
+              )
+
+      , fuzz string "fail passes out an error message (unused fields are irrelevant)" <|
+        \error ->
+          "{ \"field\":\"someValue\"" ++
+          ", \"unused\":\"anotherValue\"" ++
+          "}"
+          |> ( Decode.decodeString
+               ( Decode.field
+                 "field"
+                 (Decode.fail error)
+               )
+             )
+          |> ( Expect.equal
+               ( Err
+                 ( Decode.InvalidJson
+                    ("I ran into a `fail` decoder at _.field: " ++ error)
+                 )
+               )
+             )
       ]

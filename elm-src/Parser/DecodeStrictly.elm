@@ -1,4 +1,4 @@
-module Parser.DecodeStrictly exposing (Decoder, Failure(..), decodeString, string, bool, int, float, field, map, map2, map3)
+module Parser.DecodeStrictly exposing (Decoder, Failure(..), decodeString, string, bool, int, float, field, optionalField, map, map2, map3, map4, oneOf, succeed, fail)
 
 -- Wraps the standard Json.Decode, adding the ability to fail
 -- if the decoded JSON contains any unrecognised elements.
@@ -23,7 +23,8 @@ type alias Decoder a = Decode.Decoder (DecodeState a)
 
 -- Our errors may be either a set of unused fields,
 -- or a string error from the underlying decoder.
-type Failure = Unused UnusedFields | InvalidJSON String
+type Failure = Unused UnusedFields | InvalidJson String
+
 
 -- Actually allow ourselves to decode stuff
 -- TODO: may want a way to decode and return warnings
@@ -40,51 +41,11 @@ decodeString decoder string =
             Err (Unused unusedFields)
 
         Err message ->
-          Err (InvalidJSON message)
+          Err (InvalidJson message)
 
 
--- Copy primitive decoders
 
--- Helper function for copying decoders
-addUnusedFields : UnusedFields -> Decode.Decoder a -> Decoder a
-addUnusedFields unusedFields decoder =
-  Decode.map
-    ( \decoded -> Decoding decoded unusedFields )
-    decoder
-
-string : Decoder String
-string =
-  addUnusedFields Set.empty Decode.string
-
-bool : Decoder Bool
-bool =
-  Decode.map
-    ( \decodedBool -> Decoding decodedBool Set.empty )
-    ( Decode.bool )
-
-int : Decoder Int
-int =
-  Decode.map
-    ( \decodedInt -> Decoding decodedInt Set.empty )
-    ( Decode.int )
-
-float : Decoder Float
-float =
-  Decode.map
-    ( \decodedFloat -> Decoding decodedFloat Set.empty )
-    ( Decode.float )
-
--- Create a new decoder with a modified list of unused fields.
--- mapUnusedFields : ((Set String) -> (Set String)) -> Decoder a -> Decoder a
--- mapUnusedFields function decoder =
---   Decode.map
---     ( \(Decoding value unusedFields) ->
---         Decoding
---           value
---           (function unusedFields)
---     )
---     decoder
---
+-- Helper functions for wrapping decoders
 
 -- Decode an object to its keys (represented as an UnusedFields object)
 fieldNames : Decode.Decoder UnusedFields
@@ -108,6 +69,39 @@ prefixUnusedFields prefix fields =
     ( \unprefixed -> prefix :: unprefixed )
     fields
 
+-- Build a DecodeStrictly.Decoder from two Json.Decode.Decoders:
+-- one for the actual value, and one for the unused fields.
+addUnusedFields : Decode.Decoder a -> Decode.Decoder UnusedFields -> Decoder a
+addUnusedFields decoder unusedFieldsDecoder =
+  Decode.map2
+    Decoding
+    decoder
+    unusedFieldsDecoder
+
+-- Copy primitive decoders
+
+noUnusedFields : Decode.Decoder UnusedFields
+noUnusedFields =
+  Decode.succeed Set.empty
+
+string : Decoder String
+string =
+  addUnusedFields Decode.string noUnusedFields
+
+bool : Decoder Bool
+bool =
+  addUnusedFields Decode.bool noUnusedFields
+--
+int : Decoder Int
+int =
+  addUnusedFields Decode.int noUnusedFields
+
+float : Decoder Float
+float =
+  addUnusedFields Decode.float noUnusedFields
+
+--Primitive object decoders
+
 -- Decode a field, and mark all other fields of the current object as unused.
 field : String -> Decoder a -> Decoder a
 field name decoder =
@@ -123,6 +117,28 @@ field name decoder =
     )
     ( Decode.field name decoder )
     fieldNames
+
+-- As above, but decodes to a Maybe, returning Nothing if field not found
+-- instead of a string error message.
+-- A more robust replacement for maybe (which silently swallows parsing
+-- errors in the decoder it wraps)
+optionalField : String -> Decoder a -> Decoder (Maybe a)
+optionalField name decoder =
+  Decode.andThen
+    ( \fields ->
+      if (Set.member [name] fields) then
+        -- Use the given decoder, but wrap the result in Just.
+        map
+          Just
+          (field name decoder)
+      else
+        Decode.succeed (Decoding Nothing fields)
+    )
+    fieldNames
+
+-- Copy data structure decoders
+
+-- TODO
 
 -- Re-implementations of Json.Decode.map* functions
 
@@ -163,6 +179,28 @@ map3 builder decoder1 decoder2 decoder3 =
     decoder2
     decoder3
 
+map4 : (a -> b -> c -> d -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder d -> Decoder value
+map4 builder decoder1 decoder2 decoder3 decoder4 =
+  Decode.map4
+    ( \(Decoding value1 unused1) ->
+      \(Decoding value2 unused2) ->
+      \(Decoding value3 unused3) ->
+      \(Decoding value4 unused4) ->
+      ( Decoding
+        (builder value1 value2 value3 value4)
+
+        -- Fields are unused if we didn't use them for either component.
+        (Set.intersect
+          ( Set.intersect unused1 unused2 )
+          ( Set.intersect unused3 unused4)
+        )
+      )
+    )
+    decoder1
+    decoder2
+    decoder3
+    decoder4
+
 -- Analogous to Json.Decode.andThen
 -- Keeps only unused field values not used by _either_ decoder.
 -- andThen : (a -> Decoder b) -> Decoder a -> Decoder b
@@ -174,4 +212,23 @@ map3 builder decoder1 decoder2 decoder3 =
 --       )
 --     )
 --     decoder
-  
+
+-- Decoders for inconsistent structure
+
+oneOf : List (Decoder a) -> Decoder a
+oneOf decoders =
+    ( Decode.oneOf decoders )
+
+-- "Fancy" decoders
+
+succeed : a -> Decoder a
+succeed value =
+  addUnusedFields
+    ( Decode.succeed value )
+    fieldNames
+
+fail : String -> Decoder a
+fail error =
+  addUnusedFields
+    ( Decode.fail error )
+    noUnusedFields
