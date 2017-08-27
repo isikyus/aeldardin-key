@@ -13,6 +13,7 @@ import Platform.Cmd as Cmd
 import Platform.Sub as Sub
 
 -- Load Aeldardin libraries.
+import Parser.DecodeStrictly as DecodeStrictly
 import Dungeon.ParseJson
 import Export.Graphviz
 import Export.Html
@@ -51,13 +52,29 @@ update msg model =
           ( model, done ( Export.Graphviz.toGraphviz dungeon ) )
 
         -- TODO: return errors using their own port.
-        Err message ->
+        Err (DecodeStrictly.InvalidJson message) ->
           ( model, done message )
+
+        -- TODO: return warnings using their own port.
+        Err (DecodeStrictly.Unused unusedFields) ->
+          ( model
+          , done (DecodeStrictly.unusedFieldWarnings unusedFields)
+          )
 
     ToHtml jsonString ->
       let
           htmlOrError =
             Dungeon.ParseJson.decodeDungeon jsonString
+              |> ( Result.mapError
+                    ( \error ->
+                      case error of
+                        DecodeStrictly.InvalidJson message ->
+                          message
+
+                        DecodeStrictly.Unused unusedFields ->
+                          DecodeStrictly.unusedFieldWarnings unusedFields
+                    )
+                 )
               |> Result.andThen Export.Html.toHtmlText
       in
         case htmlOrError of

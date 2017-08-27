@@ -1,9 +1,8 @@
-module Parser.DecodeStrictly exposing (Decoder, Failure(..), decodeString, string, bool, int, float, field, optionalField, list, map, map2, map3, map4, oneOf, succeed, fail)
+module Parser.DecodeStrictly exposing (Decoder, Failure(..), unusedFieldWarnings, decodeString, string, bool, int, float, field, optionalField, list, lazy, map, map2, map3, map4, oneOf, succeed, fail)
 
 -- Wraps the standard Json.Decode, adding the ability to fail
 -- if the decoded JSON contains any unrecognised elements.
 
-import Dict
 import Set exposing (Set)
 import Json.Decode as Decode
 
@@ -24,6 +23,27 @@ type alias Decoder a = Decode.Decoder (DecodeState a)
 -- Our errors may be either a set of unused fields,
 -- or a string error from the underlying decoder.
 type Failure = Unused UnusedFields | InvalidJson String
+
+
+-- Warnings helper -- like Ruby's Array#join
+join : String -> List String -> String
+join separator list =
+  List.intersperse separator list
+    |> List.foldr (++) ""
+
+-- Build a warning message about unused fields.
+-- TODO: should I have this sort of UI code here?
+
+unusedFieldWarnings : UnusedFields -> String
+unusedFieldWarnings unused =
+  ( Set.map
+      ( \fieldPath ->
+        "Warning: unused field " ++
+        ( join "." fieldPath )
+      )
+      unused
+  )
+    |> Set.toList |> join "\n"
 
 
 -- Actually allow ourselves to decode stuff
@@ -123,6 +143,10 @@ list decoder =
     )
     ( Decode.list decoder )
 
+lazy : (() -> Decoder a) -> Decoder a
+lazy decoderBuilder =
+  Decode.lazy decoderBuilder
+
 --Primitive object decoders
 
 -- Decode a field, and mark all other fields of the current object as unused.
@@ -219,18 +243,6 @@ map4 builder decoder1 decoder2 decoder3 decoder4 =
     decoder2
     decoder3
     decoder4
-
--- Analogous to Json.Decode.andThen
--- Keeps only unused field values not used by _either_ decoder.
--- andThen : (a -> Decoder b) -> Decoder a -> Decoder b
--- andThen generator decoder =
---   Decode.andThen
---     (\(Decoding data warnings) ->
---       ( generator data
---         |> mapUnusedFields (Set.intersect warnings)
---       )
---     )
---     decoder
 
 -- Decoders for inconsistent structure
 
