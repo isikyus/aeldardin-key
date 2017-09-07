@@ -1,20 +1,22 @@
 require 'cucumber'
 require 'capybara'
 
-RSpec::Matchers.define(:output_html_matching) do |matcher|
+RSpec::Matchers.define(:output_html_matching) do |stream, matcher|
   match do |command|
-    html = Capybara.string(command.output)
+    html = Capybara.string(command.send(stream))
 
     values_match? matcher, html
   end
 
   failure_message do |command|
-    "Expected \"#{command.commandline}\" to output HTML matching #{description_of(matcher)} but got \"#{command.output}\""
+    output_verb = "output"
+    output_verb<< " on #{stream}" unless stream == :output
+    "Expected \"#{command.commandline}\" to #{output_verb} HTML matching #{description_of(matcher)} but got \"#{command.output}\""
   end
 end
 
-Then /the output should have the title "(.*)"/ do |title|
-  expect(last_command_started).to output_html_matching have_selector('h1', :text => title)
+Then /the (output|stdout|stderr) should have the title "(.*)"/ do |stream, title|
+  expect(last_command_started).to output_html_matching stream.to_sym, have_selector('h1', :text => title)
 
   title_regexp = /<h([1-7])>#{title}<\/h\1>/
   expect(last_command_started).to have_output an_output_string_including(title)
