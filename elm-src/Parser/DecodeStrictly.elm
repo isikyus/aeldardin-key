@@ -94,16 +94,17 @@ join separator list =
 -- Build a warning message about unused fields.
 -- TODO: should I have this sort of UI code here?
 
-unusedFieldWarnings : UnusedFields -> String
+unusedFieldWarnings : UnusedFields -> List String
 unusedFieldWarnings unused =
   ( Set.map
       ( \fieldPath ->
-        "Warning: unused field " ++
-        ( join "." fieldPath )
+        "Unrecognised field \"" ++
+        ( join "." fieldPath ) ++
+        "\""
       )
       unused
   )
-    |> Set.toList |> join "\n"
+    |> Set.toList
 
 
 -- Actually allow ourselves to decode stuff
