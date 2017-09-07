@@ -1,10 +1,11 @@
-module Dungeon.ParseJson exposing (decodeDungeon)
+module Dungeon.ParseJson exposing (decodeDungeon, decodeWithUnusedFields)
 
 -- Code that knows how to parse dungeons from JSON,
 -- including resolving the shorthand syntaxes we allow in the raw YAML key.
 
 import Dungeon exposing (..)
 import Parser.DecodeStrictly exposing (..)
+import Json.Decode
 
 -- An optional field with an array value.
 -- If the field is present, this will decode it as a list;
@@ -71,7 +72,13 @@ exit =
         (field "to" stringOrInt)
     ]
 
+-- Decode the dungeon, treating unused fields as errors (i.e. crashing on them)
 -- TODO: should validate room IDs are unique.
 decodeDungeon : String -> Result Failure Dungeon
 decodeDungeon jsonString =
   decodeString dungeon jsonString
+
+-- As above, but return unused fields as a separate list.
+decodeWithUnusedFields : String -> Result String (Dungeon, UnusedFields )
+decodeWithUnusedFields =
+  Json.Decode.decodeString (withUnusedFields dungeon)

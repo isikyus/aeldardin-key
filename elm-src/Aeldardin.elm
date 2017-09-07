@@ -18,6 +18,7 @@ import Dungeon
 import Dungeon.ParseJson
 import Export.Graphviz
 import Export.Html
+import Set
 
 main : Program Never Model Msg
 main =
@@ -50,23 +51,22 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Load jsonString ->
-      case Dungeon.ParseJson.decodeDungeon jsonString of
-        Ok dungeon ->
-          ( Just dungeon, Cmd.none )
+      case Dungeon.ParseJson.decodeWithUnusedFields jsonString of
+        Ok (dungeon, unusedFields) ->
+          ( Just dungeon
+          , if (Set.size unusedFields == 0) then
+              Cmd.none
+            else
+              Cmd.batch
+                ( List.map
+                    warn
+                    (DecodeStrictly.unusedFieldWarnings unusedFields)
+                )
+          )
 
         -- TODO: return errors using their own port.
-        Err (DecodeStrictly.InvalidJson message) ->
+        Err message ->
           ( Nothing, error message )
-
-        -- TODO: return warnings using their own port.
-        Err (DecodeStrictly.Unused unusedFields) ->
-          ( Nothing
-          , Cmd.batch
-              ( List.map
-                  warn
-                  (DecodeStrictly.unusedFieldWarnings unusedFields)
-              )
-          )
 
     ToGraphviz () ->
         case model of

@@ -1,4 +1,4 @@
-module Parser.DecodeStrictly exposing (Decoder, Failure(..), unusedFieldWarnings, decodeString, string, bool, int, float, field, optionalField, list, lazy, map, map2, map3, map4, oneOf, succeed, fail)
+module Parser.DecodeStrictly exposing (UnusedFields, Decoder, Failure(..), unusedFieldWarnings, decodeString, withUnusedFields, string, bool, int, float, field, optionalField, list, lazy, map, map2, map3, map4, oneOf, succeed, fail)
 
 -- Wraps the standard Json.Decode, adding the ability to fail
 -- if the decoded JSON contains any unrecognised elements.
@@ -124,6 +124,14 @@ decodeString decoder string =
         Err message ->
           Err (InvalidJson message)
 
+-- Convert a strict decoder into a regular one that returns warnings.
+-- Really only makes sense at the top level (near decodeString, etc.)
+withUnusedFields : Decoder a -> Decode.Decoder (a, UnusedFields)
+withUnusedFields =
+  Decode.map
+    ( \(Decoding data unusedFields) ->
+        (data, unusedFields)
+    )
 
 
 -- Helper functions for wrapping decoders
