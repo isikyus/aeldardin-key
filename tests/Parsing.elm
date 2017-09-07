@@ -5,6 +5,8 @@ import Expect
 import Fuzz exposing (list, int, tuple, string)
 
 import Regex as R
+import Parser.DecodeStrictly as Decode
+import Set
 
 import Dungeon as D
 import Dungeon.ParseJson as ParseJson
@@ -81,6 +83,57 @@ all =
                 )
               )
 
+      , fuzz2 string string "Reports an error on seeing an unknown field" <|
+        \field -> \value ->
+          "{ \"title\":\"someTitle\"" ++
+          ", \"zones\":" ++
+            "[{  \"id\":1" ++
+              ", \"rooms\": " ++
+                "[{ \"key\": 2" ++
+                ", \"name\": \"someRoomName\"" ++
+                -- Prefix with an underscore to ensure it doesn't use a real field name.
+                ", \"_" ++ (escapeForJson field) ++ "\": \"" ++
+                    (escapeForJson value) ++ "\"" ++
+                "}]" ++
+            "}]" ++
+          "}"
+          |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
+          |> Expect.equal
+              ( Err
+                  ( Decode.Unused
+                    ( Set.singleton ["zones", "rooms", "_" ++ field] )
+                  )
+              )
+
+      , fuzz2 string string "Reports all errors from unknown fields" <|
+        \field -> \value ->
+          "{ \"title\":\"someTitle\"" ++
+          ", \"noSuchField\":\"someTitle\"" ++
+          ", \"zones\":" ++
+            "[{  \"id\":1" ++
+              ", \"anotherUnusedField\":3" ++
+              ", \"rooms\": " ++
+                "[{ \"key\": 2" ++
+                ", \"name\": \"someRoomName\"" ++
+                -- Prefix with an underscore to ensure it doesn't use a real field name.
+                ", \"_" ++ (escapeForJson field) ++ "\": \"" ++
+                    (escapeForJson value) ++ "\"" ++
+                "}]" ++
+            "}]" ++
+          "}"
+          |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
+          |> Expect.equal
+              ( Err
+                  ( Decode.Unused
+                    ( Set.fromList
+                      [ ["noSuchField"]
+                      , ["zones", "anotherUnusedField"]
+                      , ["zones", "rooms", "_" ++ field]
+                      ]
+                    )
+                  )
+              )
+
       , fuzz3 string string string "Parses a dungeon with a string-keyed room" <|
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
@@ -116,7 +169,8 @@ all =
                 ", \"exits\":" ++
                     "[{ \"to\":\"" ++ (escapeForJson key) ++ "\"" ++
                       ", \"type\":\"concealed\"" ++
-                      ", \"signs\":\"" ++ (escapeForJson details) ++ "\"" ++
+                      -- TODO: signs of exits not supported yet.
+                      -- ", \"signs\":\"" ++ (escapeForJson details) ++ "\"" ++
                     "}]" ++
               "}]" ++
             "}]" ++

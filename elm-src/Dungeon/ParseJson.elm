@@ -17,23 +17,6 @@ optionalListField name decoder =
         name
         (list decoder)
     )
---   dict Parser.DecodeStrictly.value
---     |> Parser.DecodeStrictly.andThen
---         ( \values -> Dict.get name values
--- 
---             -- If value exists, apply the given decoder.
---             |> Maybe.map (decodeValue (list decoder))
--- 
---             -- Otherwise, decode to an empty list.
---             |> Maybe.withDefault (Ok [])
--- 
---             -- If the nested decoding failed, pass up the failure.
---             |> \decoded -> case decoded of
---                                 Ok result ->
---                                   succeed result
---                                 Err message ->
---                                   fail message
---         )
 
 dungeon : Decoder Dungeon
 dungeon =
