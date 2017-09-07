@@ -136,6 +136,66 @@ all =
                   )
                )
 
+      , fuzz2 string string "Lazy decoding works" <|
+        \key -> \value ->
+            "{\"" ++ (escapeForJson key) ++ "\":\"" ++ (escapeForJson value) ++ "\"}"
+            |> ( Decode.decodeString
+                  ( Decode.lazy (\_ -> Decode.field key Decode.string) )
+              )
+            |> Expect.equal ( Ok value )
+
+      , fuzz2 string string "Lazy decoding propogates unused fields" <|
+        \key -> \value ->
+            "{\"" ++ (escapeForJson key) ++ "\":\"" ++ (escapeForJson value) ++ "\"}"
+            |> ( Decode.decodeString
+                  ( Decode.lazy
+                    (\_ -> Decode.succeed "used nothing")
+                  )
+              )
+            |> ( Expect.equal
+                  ( Err
+                    ( Decode.Unused
+                      ( Set.singleton [key] )
+                    )
+                  )
+               )
+
+      , fuzz3 string string string "Fails when using only some of multiple fields" <|
+        \field -> \nested -> \unused ->
+            "{\"" ++ (escapeForJson field) ++ "_singleton\": \"a\"" ++
+            ",\"" ++ (escapeForJson field) ++ "_list\": [\"b\", \"1\"]" ++
+            ",\"" ++ (escapeForJson field) ++ "_object\":" ++
+                "{\"" ++ (escapeForJson nested) ++ "\": \"c\"" ++
+                ",\"_" ++ (escapeForJson unused) ++ "\": \"see\"" ++
+                "}" ++
+            ",\"" ++ (escapeForJson unused) ++ "\": \"d\"" ++
+            "}"
+            |> ( Decode.decodeString
+                  -- Return the two parsed fields as a pair.
+                  ( Decode.map3
+                    (,,)
+                    ( Decode.field (field ++ "_singleton") Decode.string )
+                    ( Decode.field
+                        (field ++ "_list")
+                        (Decode.list Decode.string)
+                    )
+                    ( Decode.field
+                        (field ++ "_object")
+                        (Decode.field nested Decode.string)
+                    )
+                  )
+              )
+            |> ( Expect.equal
+                  ( Err
+                    ( Decode.Unused
+                      ( Set.empty
+                        |> Set.insert [unused]
+                        |> Set.insert [field ++ "_object", "_" ++ unused]
+                      )
+                    )
+                  )
+               )
+
       , fuzz string "Succeeds when multiple fields are all used" <|
         \field ->
             "{\"" ++ (escapeForJson field) ++ "_1\": \"a\"" ++

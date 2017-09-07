@@ -24,6 +24,66 @@ type alias Decoder a = Decode.Decoder (DecodeState a)
 -- or a string error from the underlying decoder.
 type Failure = Unused UnusedFields | InvalidJson String
 
+-- Given the unused fields for several operations on an object,
+-- return the fields that none of them used. Similar to set intersection
+-- (find fields unused in all lists), except that we care about prefixes;
+-- if a certain prefix shows up in all the unused-field lists,
+-- then combine the fields under that prefix recursively.
+neverUsedFields : List UnusedFields -> UnusedFields
+neverUsedFields sets =
+  case sets of
+      (first :: rest) ->
+          List.foldr
+            ( \unused1 -> \unused2 ->
+                let
+                    allUnusedFields : UnusedFields
+                    allUnusedFields = Set.union unused1 unused2
+
+                    unusedPrefixes : UnusedFields -> Set String
+                    unusedPrefixes =
+                      Set.map
+                        ( \fieldPath ->
+                            case fieldPath of
+                                ( first :: _ ) ->
+                                    first
+
+                                [] ->
+                                  Debug.crash ("Unexpected empty list of unused fields in " ++ toString allUnusedFields)
+                        )
+
+                    neverUsedPrefixes : Set String
+                    neverUsedPrefixes =
+                      Set.intersect
+                        ( unusedPrefixes unused1 )
+                        ( unusedPrefixes unused2 )
+                in
+
+                  -- Include all unused-field paths where some prefix is unused in every set
+                  Set.filter
+                    ( \list ->
+                        case list of
+                            (head :: []) ->
+                              -- Only include a top-level field if that exact field is unused
+                              -- in all cases. If any fields under it are unused, whatever
+                              -- decoders detected those fields must have used it.
+                              ( ( Set.member [head] unused1 )
+                                && ( Set.member [head] unused2 )
+                              )
+
+                            (head :: _) ->
+                              Set.member head neverUsedPrefixes
+
+                            [] ->
+                              -- TODO: ignoring the case where the UnusedField path is empty -- should redesign things so it never is.
+                                  Debug.crash ("Unexpected empty list of unused fields in " ++ toString allUnusedFields)
+                    )
+                    allUnusedFields
+            )
+            first
+            rest
+
+      [] ->
+          Set.empty
 
 -- Warnings helper -- like Ruby's Array#join
 join : String -> List String -> String
@@ -199,7 +259,7 @@ map2 builder decoder1 decoder2 =
         (builder value1 value2)
 
         -- Fields are unused if we didn't use them for either component.
-        (Set.intersect unused1 unused2)
+        (neverUsedFields [unused1, unused2] )
       )
     )
     decoder1
@@ -214,8 +274,8 @@ map3 builder decoder1 decoder2 decoder3 =
       ( Decoding
         (builder value1 value2 value3)
 
-        -- Fields are unused if we didn't use them for either component.
-        (Set.intersect unused1 (Set.intersect unused2 unused3) )
+        -- Fields are unused if we didn't use them for any component.
+        (neverUsedFields [unused1, unused2, unused3] )
       )
     )
     decoder1
@@ -232,11 +292,8 @@ map4 builder decoder1 decoder2 decoder3 decoder4 =
       ( Decoding
         (builder value1 value2 value3 value4)
 
-        -- Fields are unused if we didn't use them for either component.
-        (Set.intersect
-          ( Set.intersect unused1 unused2 )
-          ( Set.intersect unused3 unused4)
-        )
+        -- Fields are unused if we didn't use them for any component.
+        (neverUsedFields [unused1, unused2, unused3, unused4] )
       )
     )
     decoder1
