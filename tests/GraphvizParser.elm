@@ -159,7 +159,7 @@ expectValidGraphviz graphvizOutput =
 -- Helper fuzzer-builder that samples uniformly from a list.
 sample : List a -> Fuzz.Fuzzer a
 sample values =
-  Fuzz.frequencyOrCrash
+  Fuzz.frequency
     ( List.map
       ( \a -> (1, Fuzz.constant a) )
       values
@@ -197,7 +197,7 @@ validNonNumericId =
 -- (that won't require quotes, etc.)
 validId : Fuzz.Fuzzer String
 validId =
-  Fuzz.frequencyOrCrash
+  Fuzz.frequency
     [ ( 1,
         Fuzz.intRange 0 Random.maxInt
           |> Fuzz.map toString
