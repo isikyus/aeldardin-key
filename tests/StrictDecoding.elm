@@ -11,15 +11,29 @@ import Dict
 import Parser.DecodeStrictly as Decode
 
 escapeForJson : String -> String
-escapeForJson string =
-  ( R.replace
-      R.All
-      -- \\\\ means a single backslash -- escaped once for the Elm string,
-      -- and a second time for the regular expression engine.
-      (R.regex "\"|\\\\")
-      (\match -> "\\" ++ match.match)
-      string
-  )
+escapeForJson =
+  let
+    escapeSpecialChar : Char -> String
+    escapeSpecialChar char =
+      case char of
+          -- List of control characters from http://www.json.org/
+          '\"' -> "\\\""
+          '\\' -> "\\\\"
+          '/' -> "\\/"
+          '\b' -> "\\b"
+          '\f' -> "\\f"
+          '\n' -> "\\n"
+          '\r' -> "\\r"
+          '\t' -> "\\t"
+
+          _ ->
+            ( String.fromChar char )
+  in
+    String.foldr
+      (\char -> \string ->
+        ( escapeSpecialChar char ) ++ string
+      )
+      ""
 
 boolToJson : Bool -> String
 boolToJson value =
