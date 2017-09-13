@@ -5,20 +5,38 @@ import Expect
 import Fuzz exposing (list, int, tuple, string)
 
 import Regex as R
+import Parser.DecodeStrictly as Decode
+import Set
 
 import Dungeon as D
 import Dungeon.ParseJson as ParseJson
 
+
+
 escapeForJson : String -> String
-escapeForJson string =
-  ( R.replace
-      R.All
-      -- \\\\ means a single backslash -- escaped once for the Elm string,
-      -- and a second time for the regular expression engine.
-      (R.regex "\"|\\\\")
-      (\match -> "\\" ++ match.match)
-      string
-  )
+escapeForJson =
+  let
+    escapeSpecialChar : Char -> String
+    escapeSpecialChar char =
+      case char of
+          -- List of control characters from http://www.json.org/
+          '\"' -> "\\\""
+          '\\' -> "\\\\"
+          '/' -> "\\/"
+          '\b' -> "\\b"
+          '\f' -> "\\f"
+          '\n' -> "\\n"
+          '\r' -> "\\r"
+          '\t' -> "\\t"
+
+          _ ->
+            ( String.fromChar char )
+  in
+    String.foldr
+      (\char -> \string ->
+        ( escapeSpecialChar char ) ++ string
+      )
+      ""
 
 all : Test
 all =
@@ -36,17 +54,21 @@ all =
           |> Result.mapError (\error -> ())
           |> Expect.equal (Err ())
 
-      , fuzz3 string string int "Parses a dungeon with only empty zones" <|
-        \title -> \room -> \key ->
+      , fuzz3 string string int "Parses a dungeon with a named zone" <|
+        \title -> \zone -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{}]" ++
+            "[{  \"id\":" ++ (toString key) ++
+              ", \"name\":\"" ++ (escapeForJson zone) ++ "\"" ++
+            "}]" ++
           "}"
           |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
           |> Expect.equal
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      (toString key)
+                      (Just zone)
                       []
                       (D.Regions [])
                   ]
@@ -57,10 +79,11 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
-              "[{ \"key\": " ++ (toString key) ++
-               ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
-              "}]" ++
+            "[{  \"id\":1" ++
+              ", \"rooms\": " ++
+                "[{ \"key\": " ++ (toString key) ++
+                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
+                "}]" ++
             "}]" ++
           "}"
           |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
@@ -68,17 +91,71 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [D.Room (toString key) room []]
                       (D.Regions [])
                   ]
                 )
               )
 
+      , fuzz2 string string "Reports an error on seeing an unknown field" <|
+        \field -> \value ->
+          "{ \"title\":\"someTitle\"" ++
+          ", \"zones\":" ++
+            "[{  \"id\":1" ++
+              ", \"rooms\": " ++
+                "[{ \"key\": 2" ++
+                ", \"name\": \"someRoomName\"" ++
+                -- Prefix with an underscore to ensure it doesn't use a real field name.
+                ", \"_" ++ (escapeForJson field) ++ "\": \"" ++
+                    (escapeForJson value) ++ "\"" ++
+                "}]" ++
+            "}]" ++
+          "}"
+          |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
+          |> Expect.equal
+              ( Err
+                  ( Decode.Unused
+                    ( Set.singleton ["zones", "rooms", "_" ++ field] )
+                  )
+              )
+
+      , fuzz2 string string "Reports all errors from unknown fields" <|
+        \field -> \value ->
+          "{ \"title\":\"someTitle\"" ++
+          ", \"noSuchField\":\"someTitle\"" ++
+          ", \"zones\":" ++
+            "[{  \"id\":1" ++
+              ", \"anotherUnusedField\":3" ++
+              ", \"rooms\": " ++
+                "[{ \"key\": 2" ++
+                ", \"name\": \"someRoomName\"" ++
+                -- Prefix with an underscore to ensure it doesn't use a real field name.
+                ", \"_" ++ (escapeForJson field) ++ "\": \"" ++
+                    (escapeForJson value) ++ "\"" ++
+                "}]" ++
+            "}]" ++
+          "}"
+          |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
+          |> Expect.equal
+              ( Err
+                  ( Decode.Unused
+                    ( Set.fromList
+                      [ ["noSuchField"]
+                      , ["zones", "anotherUnusedField"]
+                      , ["zones", "rooms", "_" ++ field]
+                      ]
+                    )
+                  )
+              )
+
       , fuzz3 string string string "Parses a dungeon with a string-keyed room" <|
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
+            "[{  \"id\":1" ++
+              ", \"rooms\": " ++
               "[{ \"key\": \"" ++ (escapeForJson key) ++ "\"" ++
                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
               "}]" ++
@@ -89,6 +166,8 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [D.Room key room []]
                       (D.Regions [])
                   ]
@@ -99,13 +178,15 @@ all =
         \title -> \room -> \key -> \details ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
+            "[{  \"id\":1" ++
+              ", \"rooms\": " ++
               "[{ \"key\": \"" ++ (escapeForJson key) ++ "\"" ++
                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
                 ", \"exits\":" ++
                     "[{ \"to\":\"" ++ (escapeForJson key) ++ "\"" ++
                       ", \"type\":\"concealed\"" ++
-                      ", \"signs\":\"" ++ (escapeForJson details) ++ "\"" ++
+                      -- TODO: signs of exits not supported yet.
+                      -- ", \"signs\":\"" ++ (escapeForJson details) ++ "\"" ++
                     "}]" ++
               "}]" ++
             "}]" ++
@@ -115,6 +196,8 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [ D.Room
                           key
                           room
@@ -129,7 +212,8 @@ all =
         \title -> \key1 -> \room1 -> \key2 -> \room2 ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"rooms\": " ++
+            "[{  \"id\":1" ++
+              ", \"rooms\": " ++
               "[ { \"key\": \"" ++ (escapeForJson key1) ++ "\"" ++
                 ", \"name\": \"" ++ (escapeForJson room1) ++ "\"" ++
                 ", \"exits\":" ++
@@ -154,6 +238,8 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       [ D.Room
                           key1
                           room1
@@ -176,11 +262,13 @@ all =
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
-            "[{ \"regions\": " ++
-              "[{ \"rooms\": " ++
-                "[{ \"key\": \"" ++ (toString key) ++ "\"" ++
-                ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
-                "}]" ++
+            "[{  \"id\":1" ++
+              ", \"regions\": " ++
+              "[{  \"id\":2" ++
+                ", \"rooms\": " ++
+                  "[{ \"key\": \"" ++ (toString key) ++ "\"" ++
+                  ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
+                  "}]" ++
               "}]" ++
             "}]" ++
           "}"
@@ -189,9 +277,13 @@ all =
               ( Ok
                 ( D.Dungeon title
                   [ D.Zone
+                      "1"
+                      Nothing
                       []
                       ( D.Regions
                         [ D.Zone
+                          "2"
+                          Nothing
                           [ D.Room (toString key) room []
                           ]
                           (D.Regions [])

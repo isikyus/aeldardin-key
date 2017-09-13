@@ -13,14 +13,18 @@ import Platform.Cmd as Cmd
 import Platform.Sub as Sub
 
 -- Load Aeldardin libraries.
+import Parser.DecodeStrictly as DecodeStrictly
+import Dungeon
 import Dungeon.ParseJson
 import Export.Graphviz
+import Export.Html
+import Set
 
 main : Program Never Model Msg
 main =
     Platform.program
         { init =
-          ( EmptyModel,
+          ( Nothing,
             Cmd.none
           )
         , update = update
@@ -29,36 +33,76 @@ main =
 
 -- MODEL
 
--- Not actually used, as we don't need any internal state.
-type Model = EmptyModel
+type alias Model = Maybe Dungeon.Dungeon
 
 -- UPDATE
 
 type Msg
   = Done
-  | ToGraphviz (String)
+    | Load (String)
+    | ToGraphviz ()
+    | ToHtml ()
 
 port done : String -> Cmd msg
+port warn : String -> Cmd msg
+port error : String -> Cmd msg
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    ToGraphviz jsonString ->
-      case Dungeon.ParseJson.decodeDungeon jsonString of
-        Ok dungeon ->
-          ( model, done ( Export.Graphviz.toGraphviz dungeon ) )
+    Load jsonString ->
+      case Dungeon.ParseJson.decodeWithUnusedFields jsonString of
+        Ok (dungeon, unusedFields) ->
+          ( Just dungeon
+          , if (Set.size unusedFields == 0) then
+              Cmd.none
+            else
+              Cmd.batch
+                ( List.map
+                    warn
+                    (DecodeStrictly.unusedFieldWarnings unusedFields)
+                )
+          )
 
         -- TODO: return errors using their own port.
         Err message ->
-          ( model, done message )
+          ( Nothing, error message )
+
+    ToGraphviz () ->
+        case model of
+          Just dungeon ->
+            ( model, done ( Export.Graphviz.toGraphviz dungeon ) )
+
+          Nothing ->
+            ( model, error "No dungeon to export" )
+
+    ToHtml () ->
+        case model of
+          Just dungeon ->
+            case (Export.Html.toHtmlText dungeon) of
+              Ok html ->
+                ( model, done html )
+
+              -- TODO: return errors using their own port.
+              Err message ->
+                ( model, error message )
+
+          Nothing ->
+            ( model, error "No dungeon to export" )
 
     Done ->
       ( model, Cmd.none )
 
 -- SUBSCRIPTIONS
 
-port toGraphviz : (String -> msg) -> Sub msg
+port load : (String -> msg) -> Sub msg
+port toGraphviz : (() -> msg) -> Sub msg
+port toHtml : (() -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  toGraphviz ToGraphviz
+  Sub.batch
+    [ load Load
+    , toGraphviz ToGraphviz
+    , toHtml ToHtml
+    ]

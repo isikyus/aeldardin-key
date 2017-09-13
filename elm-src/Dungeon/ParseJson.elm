@@ -1,34 +1,24 @@
-module Dungeon.ParseJson exposing (decodeDungeon)
+module Dungeon.ParseJson exposing (decodeDungeon, decodeWithUnusedFields)
 
 -- Code that knows how to parse dungeons from JSON,
 -- including resolving the shorthand syntaxes we allow in the raw YAML key.
 
 import Dict
 import Dungeon exposing (..)
-import Json.Decode exposing (..)
+import Parser.DecodeStrictly exposing (..)
+import Json.Decode
 
 -- An optional field with an array value.
 -- If the field is present, this will decode it as a list;
 -- if missing, it will default to [] in the decoded object.
 optionalListField : String -> Decoder a -> Decoder (List a)
 optionalListField name decoder =
-  dict Json.Decode.value
-    |> Json.Decode.andThen
-        ( \values -> Dict.get name values
-
-            -- If value exists, apply the given decoder.
-            |> Maybe.map (decodeValue (list decoder))
-
-            -- Otherwise, decode to an empty list.
-            |> Maybe.withDefault (Ok [])
-
-            -- If the nested decoding failed, pass up the failure.
-            |> \decoded -> case decoded of
-                                Ok result ->
-                                  succeed result
-                                Err message ->
-                                  fail message
-        )
+  map
+    ( Maybe.withDefault [] )
+    ( optionalField
+        name
+        (list decoder)
+    )
 
 dungeon : Decoder Dungeon
 dungeon =
@@ -38,8 +28,10 @@ dungeon =
 
 zone : Decoder Zone
 zone =
-  map2 Zone
-    (optionalListField "rooms" room)
+  map4 Zone
+    ( field "id" stringOrInt )
+    ( optionalField "name" string )
+    ( optionalListField "rooms" room )
     ( map
         Regions
         ( optionalListField
@@ -76,14 +68,18 @@ exit =
         Connection
         ( map
           ( Maybe.withDefault "door" )
-          ( maybe
-            (field "type" string)
-          )
+          ( optionalField "type" string )
         )
         (field "to" stringOrInt)
     ]
 
+-- Decode the dungeon, treating unused fields as errors (i.e. crashing on them)
 -- TODO: should validate room IDs are unique.
-decodeDungeon : String -> Result String Dungeon
+decodeDungeon : String -> Result Failure Dungeon
 decodeDungeon jsonString =
   decodeString dungeon jsonString
+
+-- As above, but return unused fields as a separate list.
+decodeWithUnusedFields : String -> Result String (Dungeon, UnusedFields )
+decodeWithUnusedFields =
+  Json.Decode.decodeString (withUnusedFields dungeon)

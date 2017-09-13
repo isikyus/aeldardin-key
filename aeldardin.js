@@ -16,9 +16,9 @@ requirejs.config({
 requirejs([
     'js-yaml',
     'fs', // TODO: do I actually need this?
-    'to_graphviz',
+    'elm-wrapper',
   ],
-function (yaml, fs, toGraphviz) {
+function (yaml, fs, elmWrapper) {
 
   var showUsage = function() {
     var command = process.argv0 + ' ' + process.argv[1];
@@ -54,12 +54,6 @@ function (yaml, fs, toGraphviz) {
         }
       }
     });
-  }
-
-  var convertToGraphviz = function(filename) {
-    loadKeyFromFile(filename, function(data) {
-      toGraphviz(data);
-    });
   };
 
   // Parse command line arguments.
@@ -72,7 +66,15 @@ function (yaml, fs, toGraphviz) {
   switch(subcommand) {
 
     case 'gv':
-      convertToGraphviz(filename);
+      loadKeyFromFile(filename, function(data) {
+        elmWrapper('toGraphviz', data, console.log);
+      });
+      break;
+
+    case 'html':
+      loadKeyFromFile(filename, function(data) {
+        elmWrapper('toHtml', data, console.log);
+      });
       break;
 
     default:
