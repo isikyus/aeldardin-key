@@ -23,7 +23,7 @@ function (Elm) {
       console.warn("Warning: " + warning);
     });
     worker.ports.error.subscribe(function(warning) {
-      console.error("Warning: " + warning);
+      console.error("Error: " + warning);
     });
 
     worker.ports.done.subscribe(callCallbackOnce);
