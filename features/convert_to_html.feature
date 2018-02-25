@@ -63,4 +63,8 @@ Feature: Convert key YAML files to HTML dungeon keys
     And the output should have a section headed "Storage Room"
     And the output should have a section headed "Hallway"
     And the output should have a section headed "Guard Room"
-    
+
+  Scenario: Room Details
+    When I successfully run `aeldardin html dungeon.yml`
+    Then the output section "Main Entrance" should have content "A flight of broad black-granite steps"
+    And the output section "Storage Room" should have content "piled high with crates"

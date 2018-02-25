@@ -27,5 +27,18 @@ Then /the (output|stdout|stderr) should have a section headed "(.*)"/ do |stream
   all_section_headings = all_headings.map { |heading| "section #{heading}" }
   section_any_heading  = all_section_headings.join(', ')
 
-  expect(last_command_started).to output_html_matching stream, have_selector(section_any_heading, :text => heading)
+  expect(last_command_started).to output_html_matching(stream,
+                                                       have_selector(section_any_heading,
+                                                                     :text => heading)
+                                                      )
+end
+
+Then /the (output|stdout|stderr) section "(.*)" should have content "(.*)"/ do |stream, section_heading, content|
+
+  named_section_selector = "//section/*[starts-with(name(), h)][text() = \"#{section_heading}\"]/.."
+  expect(last_command_started).to output_html_matching(stream,
+                                                       have_selector(:xpath,
+                                                                     named_section_selector,
+                                                                     :text => content)
+                                                      )
 end
