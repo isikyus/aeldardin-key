@@ -102,6 +102,15 @@ roomToHtml nesting room =
                   [ Html.text
                       room.name
                   ]
+              , Html.p
+                  []
+                  ( Maybe.withDefault
+                    []
+                    ( Maybe.map
+                        (\desc -> [ Html.text desc ] )
+                        room.description
+                    )
+                  )
               ]
             )
         )

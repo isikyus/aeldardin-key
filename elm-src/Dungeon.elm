@@ -21,6 +21,7 @@ type Regions =
 type alias Room =
   { key : String
   , name: String
+  , description : Maybe String
   , exits: List Connection
   }
 

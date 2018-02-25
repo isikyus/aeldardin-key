@@ -93,7 +93,7 @@ all =
                   [ D.Zone
                       "1"
                       Nothing
-                      [D.Room (toString key) room []]
+                      [D.Room (toString key) room Nothing []]
                       (D.Regions [])
                   ]
                 )
@@ -168,7 +168,7 @@ all =
                   [ D.Zone
                       "1"
                       Nothing
-                      [D.Room key room []]
+                      [D.Room key room Nothing []]
                       (D.Regions [])
                   ]
                 )
@@ -201,6 +201,7 @@ all =
                       [ D.Room
                           key
                           room
+                          Nothing
                           [ D.Connection "concealed" key ]
                       ]
                       (D.Regions [])
@@ -243,12 +244,14 @@ all =
                       [ D.Room
                           key1
                           room1
+                          Nothing
                           [ D.Connection "door" (toString key2)
                           , D.Connection "door" (toString key2)
                           ]
                       , D.Room
                           (toString key2)
                           room2
+                          Nothing
                           [ D.Connection "door" key1
                           , D.Connection "concealed" key1
                           ]
@@ -284,11 +287,41 @@ all =
                         [ D.Zone
                           "2"
                           Nothing
-                          [ D.Room (toString key) room []
+                          [ D.Room (toString key) room Nothing []
                           ]
                           (D.Regions [])
                         ]
                       )
+                  ]
+                )
+              )
+
+      , fuzz2 string string "Parses a dungeon with a room description" <|
+        \room -> \description ->
+          "{ \"title\":\"Test Dungeon\"" ++
+          ", \"zones\":" ++
+            "[{  \"id\":1" ++
+            ", \"rooms\": " ++
+              "[{ \"key\": \"testKey\"" ++
+              ", \"name\": \"" ++ (escapeForJson room) ++ "\"" ++
+              ", \"description\": \"" ++ (escapeForJson description) ++ "\"" ++
+              "}]" ++
+            "}]" ++
+          "}"
+          |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
+          |> Expect.equal
+              ( Ok
+                ( D.Dungeon "Test Dungeon"
+                  [ D.Zone
+                      "1"
+                      Nothing
+                      [ D.Room
+                          "testKey"
+                          room
+                          (Just description)
+                          []
+                      ]
+                      (D.Regions [])
                   ]
                 )
               )
