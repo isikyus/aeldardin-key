@@ -1,8 +1,8 @@
 module HtmlExport exposing (all)
 
+import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer, int, list, tuple, string)
 import Test exposing (..)
-import Expect
-import Fuzz exposing (list, int, tuple, string)
 import String
 
 import Dungeon as D
@@ -32,7 +32,7 @@ expectSubstring needle haystack =
 all : Test
 all =
   describe "HTML export"
-    [ fuzz3 string string string "Includes dungeon, zone, and room titles" <|
+    [ fuzz3 Fuzz.string Fuzz.string Fuzz.string "Includes dungeon, zone, and room titles" <|
         \dungeon -> \zone -> \room ->
           D.Dungeon
             dungeon
@@ -56,7 +56,7 @@ all =
                   , expectSubstring (room ++ "</h3>")
                  ]
               )
-    , fuzz string "Includes zones recursively" <|
+    , fuzz Fuzz.string "Includes zones recursively" <|
         \childZone ->
           D.Dungeon
             "<dungeon name>"

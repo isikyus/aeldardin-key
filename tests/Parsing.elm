@@ -1,8 +1,8 @@
 module Parsing exposing (all)
 
+import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer, int, list, tuple, string)
 import Test exposing (..)
-import Expect
-import Fuzz exposing (list, int, tuple, string)
 
 import Regex as R
 import Parser.DecodeStrictly as Decode
@@ -41,7 +41,7 @@ escapeForJson =
 all : Test
 all =
     describe "Parsing dungeons"
-      [ fuzz string "Parses an empty dungeon" <|
+      [ fuzz Fuzz.string "Parses an empty dungeon" <|
         \title -> "{\"title\":\"" ++ (escapeForJson title) ++ "\"}"
           |> \dungeonJson -> ParseJson.decodeDungeon dungeonJson
           |> Expect.equal (Ok (D.Dungeon title []))
@@ -54,7 +54,7 @@ all =
           |> Result.mapError (\error -> ())
           |> Expect.equal (Err ())
 
-      , fuzz3 string string int "Parses a dungeon with a named zone" <|
+      , fuzz3 Fuzz.string Fuzz.string Fuzz.int "Parses a dungeon with a named zone" <|
         \title -> \zone -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
@@ -75,7 +75,7 @@ all =
                 )
               )
 
-      , fuzz3 string string int "Parses a dungeon with a numerically-keyed room" <|
+      , fuzz3 Fuzz.string Fuzz.string Fuzz.int "Parses a dungeon with a numerically-keyed room" <|
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
@@ -99,7 +99,7 @@ all =
                 )
               )
 
-      , fuzz2 string string "Reports an error on seeing an unknown field" <|
+      , fuzz2 Fuzz.string Fuzz.string "Reports an error on seeing an unknown field" <|
         \field -> \value ->
           "{ \"title\":\"someTitle\"" ++
           ", \"zones\":" ++
@@ -121,7 +121,7 @@ all =
                   )
               )
 
-      , fuzz2 string string "Reports all errors from unknown fields" <|
+      , fuzz2 Fuzz.string Fuzz.string "Reports all errors from unknown fields" <|
         \field -> \value ->
           "{ \"title\":\"someTitle\"" ++
           ", \"noSuchField\":\"someTitle\"" ++
@@ -150,7 +150,7 @@ all =
                   )
               )
 
-      , fuzz3 string string string "Parses a dungeon with a string-keyed room" <|
+      , fuzz3 Fuzz.string Fuzz.string Fuzz.string "Parses a dungeon with a string-keyed room" <|
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
@@ -174,7 +174,7 @@ all =
                 )
               )
 
-      , fuzz4 string string string string "Parses a dungeon with a room exit with details" <|
+      , fuzz4 Fuzz.string Fuzz.string Fuzz.string Fuzz.string "Parses a dungeon with a room exit with details" <|
         \title -> \room -> \key -> \details ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
@@ -208,7 +208,7 @@ all =
                 )
               )
 
-      , fuzz5 string string string int string "Parses a dungeon with multiple linked rooms" <|
+      , fuzz5 Fuzz.string Fuzz.string Fuzz.string Fuzz.int Fuzz.string "Parses a dungeon with multiple linked rooms" <|
         \title -> \key1 -> \room1 -> \key2 -> \room2 ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
@@ -258,7 +258,7 @@ all =
                 )
               )
 
-      , fuzz3 string string int "Parses a dungeon with a room within a region" <|
+      , fuzz3 Fuzz.string Fuzz.string Fuzz.int "Parses a dungeon with a room within a region" <|
         \title -> \room -> \key ->
           "{ \"title\":\"" ++ (escapeForJson title) ++ "\"" ++
           ", \"zones\":" ++
