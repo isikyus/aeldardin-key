@@ -1,8 +1,8 @@
 module GraphvizExport exposing (all)
 
+import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer, int, list, tuple, string)
 import Test exposing (..)
-import Expect
-import Fuzz exposing (list, int, tuple, string)
 import String
 
 import GraphvizParser exposing (validId, expectValidGraphviz)
@@ -55,7 +55,7 @@ all =
       -- and either start with a non-numeral (like C identifiers)
       -- or consist only of numerals.
       -- TODO: avoid all this by using _quoted_ identifiers instead.
-      fuzz string "Graph title only contains 'identifier' characters" <|
+      fuzz Fuzz.string "Graph title only contains 'identifier' characters" <|
         \title -> D.Dungeon (String.cons '_' title) []
           |> Export.Graphviz.toGraphviz
           |> expectValidGraphviz

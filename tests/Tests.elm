@@ -1,8 +1,8 @@
 module Tests exposing (..)
 
+import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer, int, list, tuple, string)
 import Test exposing (..)
-import Expect
-import Fuzz exposing (list, int, tuple, string)
 import String
 
 import HtmlExport

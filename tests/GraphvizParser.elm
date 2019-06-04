@@ -3,9 +3,9 @@ module GraphvizParser exposing (tests, expectValidGraphviz, validId, graph, Grap
 -- A parser for a subset of the Graphviz DOT language, and tests for it.
 -- This lives in the tests because I only need it to test Graphviz export.
 
+import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer, int, list, tuple, string)
 import Test exposing (..)
-import Expect
-import Fuzz exposing (list, int, tuple, string)
 import String
 
 -- Seem to need exposing (..) for operators; TODO: check
