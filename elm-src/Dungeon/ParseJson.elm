@@ -51,9 +51,10 @@ stringOrInt =
 
 room : Decoder Room
 room =
-  map3 Room
+  map4 Room
     (field "key" stringOrInt)
     (field "name" string)
+    (optionalField "description" string)
     (optionalListField "exits" exit)
 
 

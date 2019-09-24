@@ -18,6 +18,7 @@ roomWithNameAndExits name exits =
     -- the other succinct, but we don't care about either for this test.
     name
     name
+    Nothing
     ( List.map
       (\exit -> D.Connection "door" exit)
       exits

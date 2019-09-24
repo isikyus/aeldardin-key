@@ -42,6 +42,7 @@ all =
                 [ D.Room
                     "r1"
                     room
+                    Nothing
                     []
                 ]
                 ( D.Regions [] )
@@ -77,5 +78,26 @@ all =
           |> expectOkAnd
               ( expectSubstring
                   (childZone ++ "</h3>")
+              )
+
+    , fuzz string "Includes room descriptions" <|
+        \description ->
+          D.Dungeon
+            "<dungeon name>"
+            [ D.Zone
+                "z1"
+                (Nothing)
+                [ D.Room
+                    "r1"
+                    "A Room"
+                    (Just description)
+                    []
+                ]
+                ( D.Regions [] )
+            ]
+          |> Export.Html.toHtmlText
+          |> expectOkAnd
+              ( expectSubstring
+                  ("<p>" ++ description ++ "</p>")
               )
     ]
