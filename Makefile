@@ -33,8 +33,9 @@ elm-server-side-renderer/elm-package.json : .gitmodules .git/config
 	git submodule update --init
 
 # Apparently elm-make path has to be relative to the _test_ directory, not project root
-elm-test : ${ELM_SOURCES} ${ELM_TEST_SOURCES} tests/elm-package.json elm-server-side-renderer/modify-natives node_modules/.bin/elm-test
-	node node_modules/.bin/elm-test
+elm-test : ${ELM_SOURCES} ${ELM_TEST_SOURCES} tests/elm-package.json elm-server-side-renderer/modify-natives \
+		node_modules/.bin/elm-test node_modules/.bin/elm-make
+	node node_modules/.bin/elm-test --compiler node_modules/.bin/elm-make
 
 tests/elm-package.json : elm-package.json tests/elm-package-template.json update-test-dependencies.js
 	node update-test-dependencies.js
