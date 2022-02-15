@@ -1,3 +1,6 @@
+I no longer support Aeldardin Key, and it has known security issues in its vulnerabilities.
+**Do not use this**; it is probably insecure, and doesn't work anyway.
+
 
 # Aeldardin Key
 
